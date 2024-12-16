@@ -4,9 +4,12 @@ import plotly.express as px
 from fpdf import FPDF
 from datetime import datetime
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+import folium
+from streamlit_folium import st_folium
 
-# --------------------- Inicio del Dashboard ---------------------
+# --------------------- Configuración del Dashboard ---------------------
 st.set_page_config(page_title="Holman Service Dashboard", layout="wide")
 
 st.title("Holman Service México: Plataforma de Gestión de Obras [Demo]")
@@ -26,6 +29,8 @@ proyectos = {
     "Estado Actual": ["Compra de Materiales", "Levantamiento", "Ejecución de la Obra"],
     "Avance (%)": [45, 10, 70],
     "Irregularidades Detectadas": [2, 0, 1],
+    "Fecha Inicio": ["2023-01-15", "2023-02-10", "2023-03-01"],
+    "Fecha Fin Estimada": ["2023-12-31", "2024-06-30", "2024-03-31"],
 }
 df_proyectos = pd.DataFrame(proyectos)
 
@@ -38,6 +43,7 @@ materiales = {
     "Material": ["Cemento", "Varilla", "Grava", "Arena"],
     "Cantidad Comprada": [100, 50, 30, 40],
     "Cantidad Presupuestada": [120, 50, 30, 50],
+    "Ubicación": ["CDMX", "Puebla", "Guadalajara", "Querétaro"],
 }
 df_materiales = pd.DataFrame(materiales)
 
@@ -58,7 +64,9 @@ df_costos_pred = pd.DataFrame({
 })
 
 # --------------------- Navegación Principal ---------------------
-tabs = st.tabs(["Resumen", "Cotizaciones", "Materiales", "Predicciones", "Pagos", "Facturas"])
+tabs = st.tabs([
+    "Resumen", "Cotizaciones", "Materiales", "Predicciones", "Pagos", "Facturas", "Timeline", "Riesgos"
+])
 
 # --------------------- Pestaña: Resumen ---------------------
 with tabs[0]:
@@ -70,6 +78,7 @@ with tabs[0]:
     col1.metric("Estado Actual", project_info["Estado Actual"])
     col1.metric("Avance (%)", f"{project_info['Avance (%)']}%")
     col2.metric("Irregularidades Detectadas", project_info["Irregularidades Detectadas"])
+    col2.metric("Fecha Fin Estimada", project_info["Fecha Fin Estimada"])
 
     st.dataframe(df_proyectos, use_container_width=True)
 
@@ -105,19 +114,41 @@ with tabs[2]:
     )
     st.plotly_chart(fig_materiales, use_container_width=True)
 
+    st.markdown("**Ubicaciones de los Materiales:**")
+    m = folium.Map(location=[19.432608, -99.133209], zoom_start=5)
+    locations = {
+        "CDMX": [19.432608, -99.133209],
+        "Puebla": [19.041439, -98.206273],
+        "Guadalajara": [20.659698, -103.349609],
+        "Querétaro": [20.588793, -100.389888],
+    }
+    for i, row in df_materiales.iterrows():
+        folium.Marker(
+            location=locations[row["Ubicación"]],
+            popup=f"Material: {row['Material']}<br>Cantidad Comprada: {row['Cantidad Comprada']}",
+        ).add_to(m)
+    st_folium(m, width=700, height=500)
+
 # --------------------- Pestaña: Predicciones ---------------------
 with tabs[3]:
     st.subheader("Predicciones de Avance y Duración")
 
-    st.markdown("**Modelo: Regresión Lineal**")
+    st.markdown("**Modelo: Regresión Lineal y Polinómica**")
     reg_model = LinearRegression()
     x_train = df_costos_pred[["Costo Inicial"]]
     y_train = df_costos_pred[["Costo Final Estimado"]]
     reg_model.fit(x_train, y_train)
 
+    poly_model = make_pipeline(PolynomialFeatures(2), LinearRegression())
+    poly_model.fit(x_train, y_train)
+
     user_input = st.slider("Ingresa un avance (%):", min_value=0, max_value=100, step=5)
-    pred_duracion = reg_model.predict([[user_input]])[0][0]
-    st.metric("Duración Estimada", f"{pred_duracion:.2f} días")
+    pred_lineal = reg_model.predict([[user_input]])[0][0]
+    pred_poli = poly_model.predict([[user_input]])[0][0]
+    
+    col1, col2 = st.columns(2)
+    col1.metric("Duración Lineal Estimada", f"{pred_lineal:.2f} días")
+    col2.metric("Duración Polinómica Estimada", f"{pred_poli:.2f} días")
 
 # --------------------- Pestaña: Pagos ---------------------
 with tabs[4]:
@@ -131,6 +162,15 @@ with tabs[4]:
         title="Pagos Realizados vs Pendientes"
     )
     st.plotly_chart(fig_pagos, use_container_width=True)
+
+    st.markdown("**Distribución de Pagos:**")
+    fig_pie = px.pie(
+        pagos,
+        values="Pagos Realizados",
+        names="Etapa",
+        title="Distribución de Pagos Realizados"
+    )
+    st.plotly_chart(fig_pie, use_container_width=True)
 
 # --------------------- Pestaña: Facturas ---------------------
 with tabs[5]:
@@ -169,3 +209,42 @@ with tabs[5]:
                 st.download_button(
                     label="Descargar Factura", data=pdf_file, file_name=file_name, mime="application/pdf"
                 )
+
+# --------------------- Pestaña: Timeline ---------------------
+with tabs[6]:
+    st.subheader("Timeline de Proyectos")
+    timeline_data = df_proyectos.melt(
+        id_vars="Nombre Proyecto", 
+        value_vars=["Fecha Inicio", "Fecha Fin Estimada"], 
+        var_name="Hito", 
+        value_name="Fecha"
+    )
+    timeline_data["Fecha"] = pd.to_datetime(timeline_data["Fecha"])
+
+    fig_timeline = px.timeline(
+        timeline_data, 
+        x_start="Fecha", 
+        x_end="Fecha", 
+        y="Nombre Proyecto", 
+        color="Hito",
+        title="Timeline de Proyectos"
+    )
+    st.plotly_chart(fig_timeline, use_container_width=True)
+
+# --------------------- Pestaña: Riesgos ---------------------
+with tabs[7]:
+    st.subheader("Análisis de Riesgos")
+
+    st.markdown("**Probabilidad de Retraso:**")
+    probabilidad = np.random.uniform(0.1, 0.9) * 100
+    st.metric("Probabilidad de Retraso", f"{probabilidad:.2f}%")
+
+    st.markdown("**Impacto por Fase:**")
+    fases = ["Planeación", "Compra de Materiales", "Ejecución"]
+    impactos = np.random.uniform(0, 1, len(fases))
+    df_impactos = pd.DataFrame({"Fase": fases, "Impacto": impactos})
+
+    fig_impactos = px.bar(
+        df_impactos, x="Fase", y="Impacto", title="Impacto Potencial por Fase"
+    )
+    st.plotly_chart(fig_impactos, use_container_width=True)
