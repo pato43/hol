@@ -190,7 +190,7 @@ elif tabs == "Etapa 3: Programación de Obra":
     st.plotly_chart(fig_costos, use_container_width=True)
 
 # --------------------- Generar Reporte PDF ---------------------
-elif tabs == "Generar Reporte PDF":
+elif tabs == "Generar Factura PDF":
     st.subheader("Generar Reporte PDF")
     st.markdown("Genera un reporte completo con los datos actuales del levantamiento, programación y costos estimados.")
 
@@ -231,7 +231,7 @@ elif tabs == "Generar Reporte PDF":
 
         return pdf
 
-    if st.button("Generar Reporte PDF"):
+    if st.button("Generar Factura PDF"):
         pdf = generar_pdf_completo(df_levantamiento, cronograma_df)
         pdf_path = "reporte_completo.pdf"
         pdf.output(pdf_path)
