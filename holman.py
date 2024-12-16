@@ -4,7 +4,8 @@ import plotly.express as px
 from fpdf import FPDF
 from datetime import datetime
 import numpy as np
-from sklearn.linear_model import LinearRegression, PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 import folium
 from streamlit_folium import st_folium
@@ -134,18 +135,20 @@ with tabs[3]:
     st.subheader("Predicciones de Avance y Duración")
 
     st.markdown("**Modelo: Regresión Lineal y Polinómica**")
+
+    # Crear modelos de regresión con datos simulados
     reg_model = LinearRegression()
-    x_train = df_costos_pred[["Costo Inicial"]]
-    y_train = df_costos_pred[["Costo Final Estimado"]]
+    x_train = np.array(range(10)).reshape(-1, 1)  # Simula un conjunto de datos
+    y_train = np.random.uniform(50, 150, size=10)  # Resultados aleatorios
     reg_model.fit(x_train, y_train)
 
     poly_model = make_pipeline(PolynomialFeatures(2), LinearRegression())
     poly_model.fit(x_train, y_train)
 
     user_input = st.slider("Ingresa un avance (%):", min_value=0, max_value=100, step=5)
-    pred_lineal = reg_model.predict([[user_input]])[0][0]
-    pred_poli = poly_model.predict([[user_input]])[0][0]
-    
+    pred_lineal = reg_model.predict([[user_input]])[0]
+    pred_poli = poly_model.predict([[user_input]])[0]
+
     col1, col2 = st.columns(2)
     col1.metric("Duración Lineal Estimada", f"{pred_lineal:.2f} días")
     col2.metric("Duración Polinómica Estimada", f"{pred_poli:.2f} días")
@@ -196,55 +199,64 @@ with tabs[5]:
         pdf.multi_cell(0, 10, concepto)
         pdf.ln(10)
 
-        pdf.cell(200, 10, txt=f"Monto Total: ${monto:,.2f}", ln=True)
-        return pdf
+        pdf.cell(200, 10
+
+=f"Monto Total: ${monto:,.2f}", ln=True)
+
+        nombre_archivo = f"Factura_{cliente.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        pdf.output(nombre_archivo)
+        return nombre_archivo
 
     if st.button("Generar Factura"):
         if cliente and concepto and monto > 0:
-            factura_pdf = generar_factura(cliente, concepto, monto)
-            file_name = f"factura_{cliente.replace(' ', '_')}.pdf"
-            factura_pdf.output(file_name)
-
-            with open(file_name, "rb") as pdf_file:
+            archivo_factura = generar_factura(cliente, concepto, monto)
+            with open(archivo_factura, "rb") as file:
                 st.download_button(
-                    label="Descargar Factura", data=pdf_file, file_name=file_name, mime="application/pdf"
+                    label="Descargar Factura", data=file, file_name=archivo_factura, mime="application/pdf"
                 )
+        else:
+            st.warning("Por favor, completa todos los campos antes de generar la factura.")
 
 # --------------------- Pestaña: Timeline ---------------------
 with tabs[6]:
-    st.subheader("Timeline de Proyectos")
-    timeline_data = df_proyectos.melt(
-        id_vars="Nombre Proyecto", 
-        value_vars=["Fecha Inicio", "Fecha Fin Estimada"], 
-        var_name="Hito", 
-        value_name="Fecha"
-    )
-    timeline_data["Fecha"] = pd.to_datetime(timeline_data["Fecha"])
+    st.subheader("Línea de Tiempo del Proyecto")
+
+    st.markdown("**Progreso del Proyecto Seleccionado:**")
+    timeline_data = {
+        "Etapa": ["Levantamiento", "Cotización", "Compra de Materiales", "Ejecución", "Entrega"],
+        "Fecha Inicio": ["2023-01-01", "2023-01-15", "2023-02-01", "2023-03-01", "2023-12-15"],
+        "Fecha Fin": ["2023-01-14", "2023-01-31", "2023-02-28", "2023-12-14", "2023-12-31"],
+    }
+    df_timeline = pd.DataFrame(timeline_data)
+    st.dataframe(df_timeline, use_container_width=True)
 
     fig_timeline = px.timeline(
-        timeline_data, 
-        x_start="Fecha", 
-        x_end="Fecha", 
-        y="Nombre Proyecto", 
-        color="Hito",
-        title="Timeline de Proyectos"
+        df_timeline,
+        x_start="Fecha Inicio",
+        x_end="Fecha Fin",
+        y="Etapa",
+        title="Línea de Tiempo del Proyecto",
     )
     st.plotly_chart(fig_timeline, use_container_width=True)
 
 # --------------------- Pestaña: Riesgos ---------------------
 with tabs[7]:
-    st.subheader("Análisis de Riesgos")
+    st.subheader("Gestión de Riesgos e Irregularidades")
 
-    st.markdown("**Probabilidad de Retraso:**")
-    probabilidad = np.random.uniform(0.1, 0.9) * 100
-    st.metric("Probabilidad de Retraso", f"{probabilidad:.2f}%")
-
-    st.markdown("**Impacto por Fase:**")
-    fases = ["Planeación", "Compra de Materiales", "Ejecución"]
-    impactos = np.random.uniform(0, 1, len(fases))
-    df_impactos = pd.DataFrame({"Fase": fases, "Impacto": impactos})
-
-    fig_impactos = px.bar(
-        df_impactos, x="Fase", y="Impacto", title="Impacto Potencial por Fase"
+    st.markdown("**Irregularidades Detectadas por Proyecto:**")
+    fig_irregularidades = px.bar(
+        df_proyectos,
+        x="Nombre Proyecto",
+        y="Irregularidades Detectadas",
+        title="Irregularidades Detectadas por Proyecto",
     )
-    st.plotly_chart(fig_impactos, use_container_width=True)
+    st.plotly_chart(fig_irregularidades, use_container_width=True)
+
+    st.markdown("**Simulación de Riesgos:**")
+    prob_riesgo = st.slider("Probabilidad de Riesgo (%)", min_value=0, max_value=100, step=5)
+    impacto = st.slider("Impacto Estimado ($)", min_value=1000, max_value=50000, step=1000)
+
+    riesgo_estimado = prob_riesgo / 100 * impacto
+    st.metric("Riesgo Estimado", f"${riesgo_estimado:,.2f}")
+
+  
