@@ -22,7 +22,8 @@ st.markdown(
 # Barra lateral con pestañas
 tabs = st.sidebar.radio(
     "Navegación por etapas:",
-    ("Inicio", "Etapa 1: Levantamiento", "Generar Reporte PDF")
+    ("Inicio", "Etapa 1: Levantamiento", "Etapa 2: Cotización", 
+     "Etapa 3: Programación de Obra", "Etapa 4: Ejecución y Monitoreo", "Generar Reporte PDF")
 )
 
 # --------------------- Pestaña: Inicio ---------------------
@@ -32,12 +33,36 @@ if tabs == "Inicio":
         """
         Este dashboard permite supervisar las etapas principales de un proyecto:
         - **Levantamiento de Información**
+        - **Cotización**
+        - **Programación de Obra**
+        - **Ejecución y Monitoreo**
         - **Generación de Reportes**
         
         Utiliza los gráficos interactivos y herramientas disponibles para analizar el progreso.
         """
     )
 
+# --------------------- Pestañas Condicionales ---------------------
+elif tabs == "Etapa 1: Levantamiento":
+    # Incluye el código de levantamiento aquí (ya compartido anteriormente).
+
+elif tabs == "Etapa 2: Cotización":
+    # Incluye el código de cotización aquí (ya compartido anteriormente).
+
+elif tabs == "Etapa 3: Programación de Obra":
+    # Incluye el código de programación aquí (ya compartido anteriormente).
+
+elif tabs == "Etapa 4: Ejecución y Monitoreo":
+    # Incluye el código de ejecución aquí (ya compartido anteriormente).
+
+elif tabs == "Generar Reporte PDF":
+    st.subheader("Generar Reporte PDF")
+    st.markdown("Haz clic en el botón para generar un reporte en formato PDF con los datos actuales de levantamiento.")
+
+    if st.button("Generar Reporte PDF"):
+        pdf = generar_pdf(df_levantamiento)
+        pdf.output("reporte_seguimiento.pdf")
+        st.success("¡Reporte PDF generado correctamente! Descarga el archivo desde la carpeta de ejecución.")
 # --------------------- Pestaña: Etapa 1: Levantamiento ---------------------
 elif tabs == "Etapa 1: Levantamiento":
     st.subheader("Etapa 1: Levantamiento de Información")
