@@ -234,3 +234,122 @@ st.markdown(f"""
 pendientes_ejecucion = len(df_ejecucion[df_ejecucion["Estado Ejecución"] == "Pendiente"])
 if pendientes_ejecucion > 0:
     st.warning(f"Hay {pendientes_ejecucion} proyecto(s) pendiente(s) de ejecución.")
+# --------------------- Parte 4: Entrega y Pagos/Seguimiento ---------------------
+# Corrección y ampliación para incluir las etapas de "Entrega" y "Pagos y Seguimiento"
+
+st.subheader("Etapa 5: Entrega")
+st.markdown("En esta etapa se detallan las fechas, responsables y estatus de la entrega de cada proyecto.")
+
+# Simulación de datos para la etapa de entrega
+entrega_data = {
+    "ID Proyecto": [1, 2, 3],
+    "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
+    "Fecha Inicio Entrega": ["2023-03-02", "2023-04-21", "2023-06-01"],
+    "Fecha Fin Entrega": ["2023-03-10", "2023-05-01", "2023-06-10"],
+    "Estado Entrega": ["Completado", "En Progreso", "Pendiente"],
+    "Responsable Entrega": ["Arq. Pérez", "Ing. López", "Arq. Martínez"],
+}
+df_entrega = pd.DataFrame(entrega_data)
+
+# Conversión de fechas a formato datetime
+df_entrega["Fecha Inicio Entrega"] = pd.to_datetime(df_entrega["Fecha Inicio Entrega"])
+df_entrega["Fecha Fin Entrega"] = pd.to_datetime(df_entrega["Fecha Fin Entrega"])
+
+# Mostrar tabla de entrega
+st.markdown("### Información de Entrega por Proyecto")
+st.dataframe(df_entrega, use_container_width=True)
+
+# Gráfico de progreso de entrega
+fig_entrega = px.timeline(
+    df_entrega,
+    x_start="Fecha Inicio Entrega",
+    x_end="Fecha Fin Entrega",
+    y="Nombre Proyecto",
+    title="Cronograma de Entrega",
+    color="Estado Entrega",
+    color_discrete_map={
+        "Completado": "green",
+        "En Progreso": "orange",
+        "Pendiente": "red",
+    },
+)
+fig_entrega.update_yaxes(categoryorder="total ascending")
+st.plotly_chart(fig_entrega, use_container_width=True)
+
+# Detalle de proyectos en entrega
+selected_entrega = st.selectbox("Selecciona un Proyecto para Detallar Entrega", df_entrega["Nombre Proyecto"])
+
+detalle_entrega = df_entrega[df_entrega["Nombre Proyecto"] == selected_entrega].iloc[0]
+st.markdown(f"""
+**Proyecto:** {detalle_entrega['Nombre Proyecto']}  
+**Inicio de Entrega:** {detalle_entrega['Fecha Inicio Entrega'].strftime('%d-%m-%Y')}  
+**Fin Estimado:** {detalle_entrega['Fecha Fin Entrega'].strftime('%d-%m-%Y')}  
+**Estado:** {detalle_entrega['Estado Entrega']}  
+**Responsable:** {detalle_entrega['Responsable Entrega']}
+""")
+
+# Mensaje de advertencia para entregas pendientes
+pendientes_entrega = len(df_entrega[df_entrega["Estado Entrega"] == "Pendiente"])
+if pendientes_entrega > 0:
+    st.warning(f"Hay {pendientes_entrega} proyecto(s) pendiente(s) de entrega.")
+
+# --------------------- Etapa 6: Pagos y Seguimiento ---------------------
+st.subheader("Etapa 6: Pagos y Seguimiento")
+st.markdown("Aquí se monitorean los pagos realizados, pendientes y el seguimiento de los mismos.")
+
+# Simulación de datos para la etapa de pagos y seguimiento
+pagos_data = {
+    "ID Proyecto": [1, 2, 3],
+    "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
+    "Monto Total": [500000, 1200000, 750000],
+    "Monto Pagado": [500000, 600000, 0],
+    "Monto Pendiente": [0, 600000, 750000],
+    "Fecha Último Pago": ["2023-03-15", "2023-04-25", None],
+    "Estado Pagos": ["Pagado", "Parcial", "Pendiente"],
+}
+df_pagos = pd.DataFrame(pagos_data)
+
+# Conversión de fechas a formato datetime, manejo de valores nulos
+df_pagos["Fecha Último Pago"] = pd.to_datetime(df_pagos["Fecha Último Pago"], errors="coerce")
+
+# Mostrar tabla de pagos y seguimiento
+st.markdown("### Información de Pagos por Proyecto")
+st.dataframe(df_pagos, use_container_width=True)
+
+# Gráfico de pagos por estado
+fig_pagos = px.pie(
+    df_pagos,
+    names="Estado Pagos",
+    values="Monto Total",
+    title="Distribución del Estado de Pagos",
+    color="Estado Pagos",
+    color_discrete_map={
+        "Pagado": "green",
+        "Parcial": "orange",
+        "Pendiente": "red",
+    },
+)
+st.plotly_chart(fig_pagos, use_container_width=True)
+
+# Detalle de pagos por proyecto
+selected_pagos = st.selectbox("Selecciona un Proyecto para Detallar Pagos", df_pagos["Nombre Proyecto"])
+
+detalle_pagos = df_pagos[df_pagos["Nombre Proyecto"] == selected_pagos].iloc[0]
+ultimo_pago = (
+    detalle_pagos["Fecha Último Pago"].strftime('%d-%m-%Y')
+    if pd.notna(detalle_pagos["Fecha Último Pago"])
+    else "No realizado"
+)
+st.markdown(f"""
+**Proyecto:** {detalle_pagos['Nombre Proyecto']}  
+**Monto Total:** ${detalle_pagos['Monto Total']:,.2f}  
+**Monto Pagado:** ${detalle_pagos['Monto Pagado']:,.2f}  
+**Monto Pendiente:** ${detalle_pagos['Monto Pendiente']:,.2f}  
+**Último Pago Realizado:** {ultimo_pago}  
+**Estado:** {detalle_pagos['Estado Pagos']}
+""")
+
+# Mensaje de advertencia para pagos pendientes
+pendientes_pagos = len(df_pagos[df_pagos["Estado Pagos"] == "Pendiente"])
+if pendientes_pagos > 0:
+    st.warning(f"Hay {pendientes_pagos} proyecto(s) con pagos pendientes.")
