@@ -242,3 +242,133 @@ def generar_reporte_pdf():
 # Botón para generar PDF
 if st.button("Generar Reporte PDF"):
     generar_reporte_pdf()
+# --------------------- Etapa 5: Predicción y Análisis Futuro ---------------------
+st.subheader("Etapa 5: Predicción y Análisis Futuro")
+st.markdown(
+    "En esta sección se presentan predicciones basadas en datos históricos y modelos de machine learning. "
+    "Estos resultados te ayudarán a anticipar posibles problemas o proyecciones de desempeño."
+)
+
+# Simulación de datos históricos para la predicción
+historico_data = {
+    "Mes": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre"],
+    "Progreso Promedio (%)": [5, 15, 25, 35, 45, 55, 65, 75, 85, 95],
+    "Desviación Promedio (%)": [2, 3, 1, -2, -1, 4, 2, -3, 5, 0],
+}
+df_historico = pd.DataFrame(historico_data)
+
+# Mostrar datos históricos
+st.markdown("### Datos Históricos de Proyectos")
+st.dataframe(df_historico, use_container_width=True)
+
+# Gráfico histórico
+fig_historico = px.line(
+    df_historico,
+    x="Mes",
+    y="Progreso Promedio (%)",
+    title="Progreso Promedio Mensual (Histórico)",
+    markers=True,
+    line_shape="spline",
+)
+st.plotly_chart(fig_historico, use_container_width=True)
+
+# Modelo predictivo usando datos simulados
+from sklearn.linear_model import LinearRegression
+import numpy as np
+
+# Preparación de datos para el modelo
+meses = np.arange(1, len(df_historico) + 1).reshape(-1, 1)
+progreso = df_historico["Progreso Promedio (%)"].values
+
+# Entrenar el modelo
+modelo = LinearRegression()
+modelo.fit(meses, progreso)
+
+# Predicción para los próximos 6 meses
+meses_futuros = np.arange(len(df_historico) + 1, len(df_historico) + 7).reshape(-1, 1)
+predicciones = modelo.predict(meses_futuros)
+
+# Crear DataFrame de predicciones
+futuro_data = {
+    "Mes Futuro": ["Noviembre", "Diciembre", "Enero (2025)", "Febrero (2025)", "Marzo (2025)", "Abril (2025)"],
+    "Predicción Progreso (%)": predicciones.round(2),
+}
+df_futuro = pd.DataFrame(futuro_data)
+
+# Mostrar tabla de predicciones
+st.markdown("### Predicciones de Progreso Futuro")
+st.dataframe(df_futuro, use_container_width=True)
+
+# Gráfico de predicciones
+fig_predicciones = px.line(
+    x=["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre"] + futuro_data["Mes Futuro"],
+    y=list(progreso) + list(predicciones),
+    title="Progreso Histórico y Predicciones Futuras",
+    markers=True,
+    labels={"x": "Mes", "y": "Progreso (%)"},
+)
+fig_predicciones.update_traces(line_shape="spline")
+st.plotly_chart(fig_predicciones, use_container_width=True)
+
+# Análisis adicional
+st.markdown(
+    f"Se estima que el progreso promedio alcanzará el {predicciones[-1]:.2f}% en abril de 2025, basado en datos históricos. "
+    "Es importante ajustar estrategias si las desviaciones presupuestarias continúan aumentando."
+)
+
+# --------------------- Alertas Predictivas ---------------------
+st.subheader("Alertas Predictivas Basadas en Modelos")
+st.markdown("Basándonos en las predicciones, generamos alertas automáticas sobre posibles riesgos futuros.")
+
+# Definir alertas basadas en predicciones
+umbral_alerta = 90  # Progreso menor al 90% como alerta
+alertas_predicciones = [
+    {"Mes": mes, "Predicción Progreso (%)": progreso}
+    for mes, progreso in zip(futuro_data["Mes Futuro"], predicciones)
+    if progreso < umbral_alerta
+]
+
+# Mostrar alertas si existen
+if alertas_predicciones:
+    st.warning(f"⚠️ Se detectaron {len(alertas_predicciones)} meses con progreso estimado por debajo del umbral del {umbral_alerta}%.")
+    st.table(alertas_predicciones)
+else:
+    st.success("✅ No se detectaron alertas basadas en las predicciones actuales.")
+
+# Generar recomendaciones basadas en análisis
+st.markdown("### Recomendaciones")
+if alertas_predicciones:
+    st.markdown(
+        "- **Fortalecer la supervisión:** Aumentar el monitoreo en meses críticos para evitar retrasos.  \n"
+        "- **Reasignar recursos:** Priorizar proyectos con desviaciones significativas para garantizar su éxito.  \n"
+        "- **Implementar estrategias de mitigación:** Planificar ajustes presupuestarios en caso de incrementos inesperados."
+    )
+else:
+    st.markdown("Las proyecciones actuales son positivas, pero se recomienda mantener las estrategias actuales para evitar riesgos.")
+
+# --------------------- Exportación de Resultados ---------------------
+st.subheader("Exportación de Resultados")
+st.markdown("Puedes descargar los datos históricos y predicciones en formato CSV.")
+
+# Función para exportar CSV
+@st.cache_data
+def convertir_csv(df):
+    return df.to_csv(index=False).encode("utf-8")
+
+# Botón de descarga
+csv_historico = convertir_csv(df_historico)
+csv_futuro = convertir_csv(df_futuro)
+
+st.download_button(
+    label="Descargar Datos Históricos (CSV)",
+    data=csv_historico,
+    file_name="datos_historicos.csv",
+    mime="text/csv",
+)
+
+st.download_button(
+    label="Descargar Predicciones Futuras (CSV)",
+    data=csv_futuro,
+    file_name="predicciones_futuras.csv",
+    mime="text/csv",
+)
