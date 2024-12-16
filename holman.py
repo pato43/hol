@@ -372,3 +372,131 @@ st.download_button(
     file_name="predicciones_futuras.csv",
     mime="text/csv",
 )
+# --------------------- Etapa 6: Evaluación de Riesgos y Detección de Anomalías ---------------------
+st.subheader("Etapa 6: Evaluación de Riesgos y Detección de Anomalías")
+st.markdown(
+    "En esta sección se analizan los riesgos potenciales y se detectan posibles anomalías "
+    "en los datos relacionados con gastos e inventarios de los proyectos."
+)
+
+# Simulación de datos de gastos e inventarios
+data_anomalias = {
+    "Proyecto": ["Proyecto A", "Proyecto B", "Proyecto C", "Proyecto D", "Proyecto E"],
+    "Gastos Planificados (MXN)": [20000, 30000, 25000, 40000, 15000],
+    "Gastos Reales (MXN)": [22000, 45000, 27000, 41000, 20000],
+    "Inventario Planificado (unidades)": [100, 150, 120, 180, 80],
+    "Inventario Real (unidades)": [95, 140, 110, 200, 75],
+}
+
+df_anomalias = pd.DataFrame(data_anomalias)
+
+# Mostrar datos de gastos e inventarios
+st.markdown("### Datos de Gastos e Inventarios")
+st.dataframe(df_anomalias, use_container_width=True)
+
+# Calcular diferencias y detectar anomalías
+df_anomalias["Diferencia Gastos (%)"] = (
+    ((df_anomalias["Gastos Reales (MXN)"] - df_anomalias["Gastos Planificados (MXN)"])
+     / df_anomalias["Gastos Planificados (MXN)"]) * 100
+).round(2)
+
+df_anomalias["Diferencia Inventario (%)"] = (
+    ((df_anomalias["Inventario Real (unidades)"] - df_anomalias["Inventario Planificado (unidades)"])
+     / df_anomalias["Inventario Planificado (unidades)"]) * 100
+).round(2)
+
+# Visualización de anomalías
+st.markdown("### Análisis de Desviaciones")
+fig_anomalias_gastos = px.bar(
+    df_anomalias,
+    x="Proyecto",
+    y="Diferencia Gastos (%)",
+    title="Desviaciones en Gastos por Proyecto",
+    color="Diferencia Gastos (%)",
+    color_continuous_scale="RdYlGn",
+    labels={"Diferencia Gastos (%)": "Diferencia (%)"},
+)
+st.plotly_chart(fig_anomalias_gastos, use_container_width=True)
+
+fig_anomalias_inventario = px.bar(
+    df_anomalias,
+    x="Proyecto",
+    y="Diferencia Inventario (%)",
+    title="Desviaciones en Inventarios por Proyecto",
+    color="Diferencia Inventario (%)",
+    color_continuous_scale="RdYlBu",
+    labels={"Diferencia Inventario (%)": "Diferencia (%)"},
+)
+st.plotly_chart(fig_anomalias_inventario, use_container_width=True)
+
+# Resaltar proyectos con mayores riesgos
+st.markdown("### Proyectos en Riesgo")
+proyectos_riesgo = df_anomalias[
+    (df_anomalias["Diferencia Gastos (%)"] > 20) | (df_anomalias["Diferencia Inventario (%)"] > 20)
+]
+
+if not proyectos_riesgo.empty:
+    st.warning("⚠️ Se identificaron los siguientes proyectos con desviaciones significativas:")
+    st.dataframe(proyectos_riesgo, use_container_width=True)
+else:
+    st.success("✅ No se identificaron proyectos con desviaciones críticas.")
+
+# --------------------- Alertas de Anomalías ---------------------
+st.subheader("Alertas de Anomalías")
+st.markdown(
+    "Con base en las diferencias detectadas, se generarán alertas automáticas "
+    "para notificar cualquier anomalía significativa por correo."
+)
+
+# Función para detectar anomalías
+@st.cache_data
+def detectar_anomalias(data):
+    alertas = []
+    for index, row in data.iterrows():
+        if row["Diferencia Gastos (%)"] > 20:
+            alertas.append(
+                f"Anomalía detectada en {row['Proyecto']}: "
+                f"Gastos reales superan en un {row['Diferencia Gastos (%)']}% los planificados."
+            )
+        if row["Diferencia Inventario (%)"] > 20:
+            alertas.append(
+                f"Anomalía detectada en {row['Proyecto']}: "
+                f"Inventarios reales difieren en un {row['Diferencia Inventario (%)']}% de los planificados."
+            )
+    return alertas
+
+# Generar alertas
+alertas_detectadas = detectar_anomalias(df_anomalias)
+
+if alertas_detectadas:
+    for alerta in alertas_detectadas:
+        st.error(alerta)
+
+    # Notificación por correo (simulación)
+    st.markdown("### Enviar Notificaciones de Anomalías")
+    if st.button("Enviar Correo de Alerta"):
+        st.success("📧 Correo enviado a rojasalexander10@gmail.com con las anomalías detectadas.")
+else:
+    st.success("✅ No se detectaron anomalías significativas para alertar.")
+
+# --------------------- Recomendaciones ---------------------
+st.subheader("Recomendaciones Basadas en el Análisis")
+st.markdown(
+    "- **Controlar gastos:** Implementar auditorías frecuentes para mitigar desviaciones.  \n"
+    "- **Optimizar inventarios:** Revisar las métricas de planificación para evitar sobrecostos.  \n"
+    "- **Automatizar alertas:** Configurar sistemas automáticos para notificaciones en tiempo real."
+)
+
+# --------------------- Exportar Resultados de Análisis ---------------------
+st.subheader("Exportar Resultados de Análisis")
+st.markdown("Descarga los resultados del análisis de riesgos y anomalías en formato CSV.")
+
+# Botón de descarga
+csv_anomalias = convertir_csv(df_anomalias)
+
+st.download_button(
+    label="Descargar Análisis de Anomalías (CSV)",
+    data=csv_anomalias,
+    file_name="analisis_anomalias.csv",
+    mime="text/csv",
+)
