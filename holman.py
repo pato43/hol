@@ -120,10 +120,14 @@ elif tabs == "Etapa 2: Cotización":
         color_discrete_sequence=px.colors.sequential.RdBu
     )
     st.plotly_chart(fig_cotizacion, use_container_width=True)
-
-# --------------------- Etapa 3: Programación de Obra ---------------------
+    # --------------------- Etapa 3: Programación de Obra ---------------------
 elif tabs == "Etapa 3: Programación de Obra":
     st.subheader("Etapa 3: Programación de Obra")
+    st.markdown(
+        "Esta etapa organiza las actividades y tiempos del proyecto en un cronograma estructurado, asegurando una ejecución eficiente y controlada."
+    )
+
+    # Simulación de cronograma
     cronograma_data = {
         "Actividad": [
             "Preparación del Terreno",
@@ -150,9 +154,11 @@ elif tabs == "Etapa 3: Programación de Obra":
     }
     cronograma_df = pd.DataFrame(cronograma_data)
 
+    # Mostrar cronograma
     st.markdown("### Cronograma de Actividades")
     st.dataframe(cronograma_df, use_container_width=True)
 
+    # Gráfico de Gantt
     fig_gantt = px.timeline(
         cronograma_df,
         x_start="Inicio Estimado",
@@ -165,17 +171,68 @@ elif tabs == "Etapa 3: Programación de Obra":
     fig_gantt.update_yaxes(categoryorder="total ascending")
     st.plotly_chart(fig_gantt, use_container_width=True)
 
+    # Cálculo estimado de costos por actividad
+    st.markdown("### Cálculo Estimado de la Obra")
+    costo_diario = st.number_input("Introduce el costo diario promedio por actividad (MXN):", min_value=0, value=5000, step=1000)
+    cronograma_df["Costo Estimado (MXN)"] = cronograma_df["Duración (días)"] * costo_diario
+
+    st.dataframe(cronograma_df[["Actividad", "Duración (días)", "Costo Estimado (MXN)"]], use_container_width=True)
+
+    # Gráfico de costos estimados
+    fig_costos = px.bar(
+        cronograma_df,
+        x="Actividad",
+        y="Costo Estimado (MXN)",
+        title="Costo Estimado por Actividad",
+        text_auto=True,
+        color="Actividad",
+    )
+    st.plotly_chart(fig_costos, use_container_width=True)
+
 # --------------------- Generar Reporte PDF ---------------------
 elif tabs == "Generar Reporte PDF":
     st.subheader("Generar Reporte PDF")
-    if st.button("Generar Reporte PDF"):
+    st.markdown("Genera un reporte completo con los datos actuales del levantamiento, programación y costos estimados.")
+
+    def generar_pdf_completo(df_levantamiento, cronograma_df):
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)
+        
+        # Título principal
+        pdf.set_font("Arial", "B", 16)
         pdf.cell(200, 10, txt="Reporte de Seguimiento de Proyectos", ln=True, align="C")
-        pdf.cell(200, 10, txt="Generado por Holman Service México", ln=True, align="C")
         pdf.ln(10)
+
+        # Sección de Levantamiento
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Etapa 1: Levantamiento", ln=True)
+        pdf.set_font("Arial", size=10)
         for i, row in df_levantamiento.iterrows():
             pdf.cell(0, 10, txt=f"- Proyecto: {row['Nombre Proyecto']} | Estado: {row['Estado Levantamiento']}", ln=True)
-        pdf.output("reporte_seguimiento.pdf")
-        st.success("¡Reporte PDF generado correctamente!")
+        pdf.ln(10)
+
+        # Sección de Programación
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Etapa 3: Programación de Obra", ln=True)
+        pdf.set_font("Arial", size=10)
+        for i, row in cronograma_df.iterrows():
+            pdf.cell(
+                0, 10,
+                txt=f"Actividad: {row['Actividad']} | Duración: {row['Duración (días)']} días | Costo: MXN {row['Costo Estimado (MXN)']:,.2f}",
+                ln=True,
+            )
+        pdf.ln(10)
+
+        # Total estimado
+        total_costo = cronograma_df["Costo Estimado (MXN)"].sum()
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt=f"Costo Total Estimado: MXN {total_costo:,.2f}", ln=True)
+
+        return pdf
+
+    if st.button("Generar Reporte PDF"):
+        pdf = generar_pdf_completo(df_levantamiento, cronograma_df)
+        pdf_path = "reporte_completo.pdf"
+        pdf.output(pdf_path)
+        st.success(f"¡Reporte PDF generado correctamente! Puedes descargarlo [aquí](./{pdf_path}).")
