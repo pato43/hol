@@ -24,7 +24,7 @@ st.markdown(
 tabs = st.sidebar.radio(
     "Navegación por etapas:",
     ("Inicio", "Etapa 1: Levantamiento", "Etapa 2: Cotización", 
-     "Etapa 3: Programación de Obra", "Etapa 4: Ejecución y Monitoreo", "Generar Reporte PDF")
+     "Etapa 3: Programación de Obra", "Etapa 4: Ejecución y Monitoreo", "Generar Factura PDF")
 )
 
 # --------------------- Pestaña: Inicio ---------------------
@@ -37,7 +37,7 @@ if tabs == "Inicio":
         - **Cotización**
         - **Programación de Obra**
         - **Ejecución y Monitoreo**
-        - **Generación de Reportes**
+        - **Generación de Facturas**
 
         Utiliza los gráficos interactivos y herramientas disponibles para analizar el progreso.
         """
@@ -191,8 +191,8 @@ elif tabs == "Etapa 3: Programación de Obra":
 
 # --------------------- Generar Reporte PDF ---------------------
 elif tabs == "Generar Factura PDF":
-    st.subheader("Generar Reporte PDF")
-    st.markdown("Genera un reporte completo con los datos actuales del levantamiento, programación y costos estimados.")
+    st.subheader("Generar Factura PDF")
+    st.markdown("Genera una Factura completo con los datos actuales del levantamiento, programación y costos estimados.")
 
     def generar_pdf_completo(df_levantamiento, cronograma_df):
         pdf = FPDF()
