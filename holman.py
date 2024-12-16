@@ -119,6 +119,105 @@ elif tabs == "Generar Reporte PDF":
     """)
     if st.button("Generar Reporte PDF"):
         generar_pdf()
+# --------------------- Etapa 2: Cotización ---------------------
+st.header("Etapa 2: Cotización")
+
+st.markdown(
+    """
+    En esta etapa se lleva a cabo un análisis detallado de los costos asociados al proyecto, considerando los materiales, 
+    mano de obra, equipos y otros insumos necesarios. 
+    """
+)
+
+# Mostrar tabla de cotización
+st.markdown("### Tabla de Costos por Concepto")
+cotizacion = {
+    "Concepto": ["Materiales", "Mano de Obra", "Equipos", "Transporte", "Imprevistos"],
+    "Costo Unitario (MXN)": [50000, 30000, 15000, 8000, 5000],
+    "Cantidad": [20, 15, 10, 5, 1],
+    "Costo Total (MXN)": [1000000, 450000, 150000, 40000, 5000],
+}
+
+cotizacion_df = pd.DataFrame(cotizacion)
+cotizacion_df["Costo Total (MXN)"] = (
+    cotizacion_df["Costo Unitario (MXN)"] * cotizacion_df["Cantidad"]
+)
+
+st.dataframe(cotizacion_df)
+
+# Mostrar costos totales
+st.markdown("### Costo Total del Proyecto")
+costo_total = cotizacion_df["Costo Total (MXN)"].sum()
+st.write(f"El costo total estimado del proyecto es **MXN {costo_total:,.2f}**.")
+
+# Gráfico de distribución de costos
+fig_cotizacion = plt.figure(figsize=(10, 6))
+plt.pie(
+    cotizacion_df["Costo Total (MXN)"],
+    labels=cotizacion_df["Concepto"],
+    autopct="%1.1f%%",
+    colors=sns.color_palette("pastel"),
+)
+plt.title("Distribución de Costos")
+st.pyplot(fig_cotizacion)
+
+# --------------------- Etapa 3: Programación de Obra ---------------------
+st.header("Etapa 3: Programación de Obra")
+
+st.markdown(
+    """
+    Esta etapa organiza las actividades y tiempos del proyecto en un cronograma estructurado, asegurando 
+    una ejecución eficiente y controlada.
+    """
+)
+
+# Mostrar cronograma
+st.markdown("### Cronograma de Actividades")
+cronograma = {
+    "Actividad": [
+        "Preparación del Terreno",
+        "Adquisición de Materiales",
+        "Construcción de Cimientos",
+        "Estructura Principal",
+        "Acabados Finales",
+    ],
+    "Duración (días)": [10, 15, 20, 30, 25],
+    "Inicio Estimado": [
+        "2025-01-01",
+        "2025-01-11",
+        "2025-01-26",
+        "2025-02-15",
+        "2025-03-17",
+    ],
+    "Fin Estimado": [
+        "2025-01-10",
+        "2025-01-25",
+        "2025-02-14",
+        "2025-03-16",
+        "2025-04-10",
+    ],
+}
+
+cronograma_df = pd.DataFrame(cronograma)
+st.dataframe(cronograma_df)
+
+# Gráfico de Gantt
+st.markdown("### Gráfico de Gantt")
+fig_gantt = plt.figure(figsize=(10, 6))
+for i, row in cronograma_df.iterrows():
+    plt.barh(
+        row["Actividad"],
+        row["Duración (días)"],
+        left=pd.to_datetime(row["Inicio Estimado"]).toordinal(),
+        color=sns.color_palette("pastel")[i],
+    )
+
+plt.gca().xaxis_date()
+plt.title("Cronograma de Obra", fontsize=14)
+plt.xlabel("Fechas")
+plt.ylabel("Actividades")
+st.pyplot(fig_gantt)
+
 # --------------------- Etapa 4: Ejecución y Monitoreo ---------------------
 st.subheader("Etapa 4: Ejecución y Monitoreo")
 st.markdown("En esta sección se realiza el seguimiento de la ejecución de los proyectos y se detectan posibles anomalías.")
@@ -315,6 +414,7 @@ st.markdown(
     f"Se estima que el progreso promedio alcanzará el {predicciones[-1]:.2f}% en abril de 2025, basado en datos históricos. "
     "Es importante ajustar estrategias si las desviaciones presupuestarias continúan aumentando."
 )
+
 
 # --------------------- Alertas Predictivas ---------------------
 st.subheader("Alertas Predictivas Basadas en Modelos")
