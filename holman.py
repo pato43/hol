@@ -500,3 +500,35 @@ st.download_button(
     file_name="analisis_anomalias.csv",
     mime="text/csv",
 )
+# --------------------- Etapa 7: Conclusiones y Próximos Pasos ---------------------
+st.header("Conclusiones y Próximos Pasos")
+st.markdown(
+    "Esta plataforma permite la detección de riesgos y anomalías en tiempo real, "
+    "lo que facilita la toma de decisiones para la mejora de procesos y la reducción de costos. "
+    "A continuación, se resumen las principales conclusiones y los pasos futuros recomendados:"
+)
+
+# Resumen de conclusiones
+st.markdown("### Resumen de Conclusiones")
+st.write(
+    """
+    - Se identificaron desviaciones significativas en algunos proyectos, particularmente en los gastos e inventarios.
+    - Los gráficos interactivos y las alertas automáticas ofrecen una forma intuitiva de monitorear estas anomalías.
+    - La herramienta es versátil y se puede adaptar a diferentes tipos de datos y métricas.
+    """
+)
+
+# Propuesta de próximos pasos
+st.markdown("### Próximos Pasos")
+st.write(
+    """
+    1. **Implementación de Alertas Automáticas**: Configurar un sistema de notificaciones en tiempo real mediante servicios como Twilio o APIs de correo.
+    2. **Ampliación de Métricas**: Incluir métricas adicionales, como tiempos de entrega, satisfacción del cliente, o eficiencia operativa.
+    3. **Integración con Bases de Datos**: Conectar la plataforma a sistemas de gestión como ERP o CRMs para automatizar la carga de datos.
+    4. **Escalabilidad**: Extender el análisis a proyectos más complejos y múltiples equipos.
+    """
+)
+
+
+# --------------------- Fin del Dashboard ---------------------
+st.success("¡Gracias por usar esta herramienta! Tu retroalimentación es valiosa para continuar mejorando.")
