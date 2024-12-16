@@ -6,4 +6,4 @@ numpy
 scikit-learn
 folium
 streamlit-folium
-matplotlib.pyplot
+matplotlib
