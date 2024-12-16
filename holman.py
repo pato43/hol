@@ -185,3 +185,88 @@ if selected_tab == "Etapa 3: Programación de Obra":
     plt.xlabel("Fechas")
     plt.ylabel("Actividades")
     st.pyplot(fig_gantt)
+# Pestaña: Anomalías y Alertas
+if selected_tab == "Anomalías y Alertas":
+    st.subheader("Detección de Anomalías y Alertas")
+    st.markdown("""
+    En esta sección se generan alertas automáticas basadas en datos simulados para identificar posibles problemas en tiempo real.
+    """)
+
+    # Simulación de datos de anomalías
+    alertas_data = {
+        "ID Proyecto": [2, 3],
+        "Nombre Proyecto": ["Planta Industrial B", "Residencial C"],
+        "Tipo Anomalía": ["Retraso Extremo", "Sobrecosto Significativo"],
+        "Descripción": ["Retraso acumulado de 5 días", "Incremento del 10% sobre el presupuesto"],
+        "Nivel de Alerta": ["Media", "Alta"],
+    }
+    df_alertas = pd.DataFrame(alertas_data)
+
+    # Mostrar tabla de alertas
+    st.markdown("### Alertas Detectadas")
+    st.dataframe(df_alertas, use_container_width=True)
+
+    # Gráfico ilustrativo de alertas
+    fig_alertas = px.pie(
+        df_alertas,
+        names="Nivel de Alerta",
+        title="Distribución de Niveles de Alerta",
+        color="Nivel de Alerta",
+        color_discrete_map={
+            "Alta": "red",
+            "Media": "orange",
+            "Baja": "green",
+        },
+    )
+    st.plotly_chart(fig_alertas, use_container_width=True)
+
+# Pestaña: Generar Reporte PDF
+if selected_tab == "Generar Reporte PDF":
+    st.subheader("Generación de Reporte en PDF")
+    st.markdown("""
+    Puedes generar un reporte del seguimiento de proyectos, incluyendo gráficos e información relevante.
+    """)
+
+    # Función para generar PDF
+    def generar_reporte_pdf():
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        
+        # Título
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(200, 10, txt="Reporte de Seguimiento de Proyectos", ln=True, align="C")
+        pdf.ln(10)
+        
+        # Sección de Cotización
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Etapa 2: Cotización", ln=True)
+        pdf.set_font("Arial", size=10)
+        for index, row in cotizacion_df.iterrows():
+            pdf.cell(200, 10, txt=f"{row['Concepto']}: MXN {row['Costo Total (MXN)']:,.2f}", ln=True)
+        pdf.cell(200, 10, txt=f"Costo Total Estimado: MXN {costo_total:,.2f}", ln=True)
+        pdf.ln(10)
+        
+        # Sección de Anomalías
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Detección de Anomalías", ln=True)
+        pdf.set_font("Arial", size=10)
+        for index, row in df_alertas.iterrows():
+            pdf.cell(200, 10, txt=f"Proyecto: {row['Nombre Proyecto']}, Tipo: {row['Tipo Anomalía']}, Nivel: {row['Nivel de Alerta']}", ln=True)
+
+        # Guardar PDF
+        pdf.output("reporte_proyectos.pdf")
+        st.success("📄 Reporte generado exitosamente: 'reporte_proyectos.pdf'")
+
+    # Botón para generar PDF
+    if st.button("Generar Reporte PDF"):
+        generar_reporte_pdf()
+        st.info("Puedes descargar el archivo PDF desde el directorio de ejecución.")
+
+# Mostrar el costo estimado destacado
+with st.container():
+    st.markdown(f"### 💰 Costo Total Estimado: **MXN {costo_total:,.2f}**")
+    st.markdown("""
+    Este costo incluye los conceptos detallados en la pestaña de cotización. 
+    Revisa las etapas para un análisis más detallado.
+    """)
