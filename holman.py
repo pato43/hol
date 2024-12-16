@@ -63,3 +63,62 @@ st.markdown(f"""
 total_pendientes = len(df_levantamiento[df_levantamiento["Estado Levantamiento"] == "Pendiente"])
 if total_pendientes > 0:
     st.warning(f"Hay {total_pendientes} proyecto(s) pendiente(s) de levantamiento.")
+# --------------------- Parte 2: Cotización ---------------------
+# Corrección y ampliación para incluir la etapa de "Cotización"
+
+st.subheader("Etapa 2: Cotización")
+st.markdown("En esta sección se detalla el progreso de las cotizaciones asociadas a cada proyecto.")
+
+# Simulación de datos para la etapa de cotización
+cotizacion_data = {
+    "ID Proyecto": [1, 2, 3],
+    "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
+    "Costo Estimado (MXN)": [500000, 1200000, 750000],
+    "Fecha Inicio Cotización": ["2023-01-11", "2023-02-21", "2023-03-26"],
+    "Fecha Fin Cotización": ["2023-01-20", "2023-02-28", "2023-04-05"],
+    "Estado Cotización": ["Completado", "En Progreso", "Pendiente"],
+}
+df_cotizacion = pd.DataFrame(cotizacion_data)
+
+# Conversión de fechas a formato datetime
+df_cotizacion["Fecha Inicio Cotización"] = pd.to_datetime(df_cotizacion["Fecha Inicio Cotización"])
+df_cotizacion["Fecha Fin Cotización"] = pd.to_datetime(df_cotizacion["Fecha Fin Cotización"])
+
+# Mostrar tabla de cotización
+st.markdown("### Información de Cotización por Proyecto")
+st.dataframe(df_cotizacion, use_container_width=True)
+
+# Gráfico de costo estimado por proyecto
+fig_cotizacion = px.bar(
+    df_cotizacion,
+    x="Nombre Proyecto",
+    y="Costo Estimado (MXN)",
+    title="Costo Estimado por Proyecto",
+    labels={"Costo Estimado (MXN)": "Costo en MXN"},
+    text_auto=True,
+    color="Estado Cotización",
+    color_discrete_map={
+        "Completado": "green",
+        "En Progreso": "orange",
+        "Pendiente": "red",
+    }
+)
+st.plotly_chart(fig_cotizacion, use_container_width=True)
+
+# Filtro para seleccionar proyectos específicos en la etapa de cotización
+selected_cotizacion = st.selectbox("Selecciona un Proyecto para Detallar Cotización", df_cotizacion["Nombre Proyecto"])
+
+# Mostrar información detallada del proyecto seleccionado
+detalle_cotizacion = df_cotizacion[df_cotizacion["Nombre Proyecto"] == selected_cotizacion].iloc[0]
+st.markdown(f"""
+**Proyecto:** {detalle_cotizacion['Nombre Proyecto']}  
+**Costo Estimado:** ${detalle_cotizacion['Costo Estimado (MXN)']:,.2f}  
+**Inicio:** {detalle_cotizacion['Fecha Inicio Cotización'].strftime('%d-%m-%Y')}  
+**Fin Estimado:** {detalle_cotizacion['Fecha Fin Cotización'].strftime('%d-%m-%Y')}  
+**Estado:** {detalle_cotizacion['Estado Cotización']}
+""")
+
+# Mensaje de advertencia para cotizaciones pendientes
+total_pendientes_cotizacion = len(df_cotizacion[df_cotizacion["Estado Cotización"] == "Pendiente"])
+if total_pendientes_cotizacion > 0:
+    st.warning(f"Hay {total_pendientes_cotizacion} proyecto(s) pendiente(s) de cotización.")
