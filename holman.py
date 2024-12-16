@@ -204,3 +204,57 @@ elif tabs == "Etapa 3: Programación de Obra":
     )
     fig_gantt.update_yaxes(categoryorder="total ascending")
     st.plotly_chart(fig_gantt, use_container_width=True)
+# --------------------- Etapa 4: Ejecución y Monitoreo ---------------------
+elif tabs == "Etapa 4: Ejecución y Monitoreo":
+    st.subheader("Etapa 4: Ejecución y Monitoreo")
+    st.markdown("En esta sección se realiza el seguimiento de la ejecución de los proyectos y se detectan posibles anomalías.")
+
+    # Simulación de datos de ejecución
+    ejecucion_data = {
+        "ID Proyecto": [1, 2, 3],
+        "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
+        "Progreso (%)": [100, 65, 30],
+        "Desviación Presupuesto (%)": [5, -2, 10],
+        "Retraso Días": [0, 5, 15],
+        "Estado General": ["Finalizado", "En Progreso", "Retrasado"],
+    }
+    df_ejecucion = pd.DataFrame(ejecucion_data)
+
+    # Mostrar tabla de ejecución
+    st.markdown("### Información de Ejecución por Proyecto")
+    st.dataframe(df_ejecucion, use_container_width=True)
+
+    # Gráfico de progreso por proyecto
+    fig_ejecucion = px.bar(
+        df_ejecucion,
+        x="Nombre Proyecto",
+        y="Progreso (%)",
+        title="Progreso de Ejecución por Proyecto",
+        color="Estado General",
+        color_discrete_map={
+            "Finalizado": "green",
+            "En Progreso": "orange",
+            "Retrasado": "red",
+        },
+        text_auto=True,
+    )
+    st.plotly_chart(fig_ejecucion, use_container_width=True)
+
+    # Filtro para seleccionar un proyecto específico
+    selected_ejecucion = st.selectbox("Selecciona un Proyecto para Detallar Ejecución", df_ejecucion["Nombre Proyecto"])
+    detalle_ejecucion = df_ejecucion[df_ejecucion["Nombre Proyecto"] == selected_ejecucion].iloc[0]
+    st.markdown(f"""
+    **Proyecto:** {detalle_ejecucion['Nombre Proyecto']}  
+    **Progreso:** {detalle_ejecucion['Progreso (%)']}%  
+    **Desviación Presupuesto:** {detalle_ejecucion['Desviación Presupuesto (%)']}%  
+    **Retraso:** {detalle_ejecucion['Retraso Días']} días  
+    **Estado General:** {detalle_ejecucion['Estado General']}
+    """)
+
+    # Advertencias sobre anomalías
+    anomalías = df_ejecucion[(df_ejecucion["Desviación Presupuesto (%)"].abs() > 10) | (df_ejecucion["Retraso Días"] > 10)]
+    if not anomalías.empty:
+        st.warning(f"⚠️ Se detectaron {len(anomalías)} anomalías en la ejecución de los proyectos.")
+        st.dataframe(anomalías, use_container_width=True)
+    else:
+        st.success("✅ No se detectaron anomalías en la ejecución de los proyectos.")
