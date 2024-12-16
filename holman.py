@@ -199,10 +199,7 @@ with tabs[5]:
         pdf.multi_cell(0, 10, concepto)
         pdf.ln(10)
 
-        pdf.cell(200, 10
-
-=f"Monto Total: ${monto:,.2f}", ln=True)
-
+        pdf.cell(200, 10=f"Monto Total: ${monto:,.2f}", ln=True)
         nombre_archivo = f"Factura_{cliente.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf"
         pdf.output(nombre_archivo)
         return nombre_archivo
@@ -260,3 +257,5 @@ with tabs[7]:
     st.metric("Riesgo Estimado", f"${riesgo_estimado:,.2f}")
 
   
+
+
