@@ -122,3 +122,115 @@ st.markdown(f"""
 total_pendientes_cotizacion = len(df_cotizacion[df_cotizacion["Estado Cotización"] == "Pendiente"])
 if total_pendientes_cotizacion > 0:
     st.warning(f"Hay {total_pendientes_cotizacion} proyecto(s) pendiente(s) de cotización.")
+# --------------------- Parte 3: Programación de la Obra y Ejecución ---------------------
+# Corrección y ampliación para incluir las etapas de "Programación de la Obra" y "Ejecución"
+
+st.subheader("Etapa 3: Programación de la Obra")
+st.markdown("En esta sección se gestiona la programación detallada de las obras asociadas a cada proyecto.")
+
+# Simulación de datos para la etapa de programación de obra
+programacion_data = {
+    "ID Proyecto": [1, 2, 3],
+    "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
+    "Fecha Inicio Programación": ["2023-01-21", "2023-03-01", "2023-04-06"],
+    "Fecha Fin Programación": ["2023-01-30", "2023-03-10", "2023-04-15"],
+    "Estado Programación": ["Completado", "En Progreso", "Pendiente"],
+}
+df_programacion = pd.DataFrame(programacion_data)
+
+# Conversión de fechas a formato datetime
+df_programacion["Fecha Inicio Programación"] = pd.to_datetime(df_programacion["Fecha Inicio Programación"])
+df_programacion["Fecha Fin Programación"] = pd.to_datetime(df_programacion["Fecha Fin Programación"])
+
+# Mostrar tabla de programación de obra
+st.markdown("### Información de Programación de Obra por Proyecto")
+st.dataframe(df_programacion, use_container_width=True)
+
+# Gráfico de progreso en la programación
+fig_programacion = px.timeline(
+    df_programacion,
+    x_start="Fecha Inicio Programación",
+    x_end="Fecha Fin Programación",
+    y="Nombre Proyecto",
+    title="Cronograma de Programación de Obra",
+    color="Estado Programación",
+    color_discrete_map={
+        "Completado": "green",
+        "En Progreso": "orange",
+        "Pendiente": "red",
+    },
+)
+fig_programacion.update_yaxes(categoryorder="total ascending")
+st.plotly_chart(fig_programacion, use_container_width=True)
+
+# Detalle de proyectos en programación
+selected_programacion = st.selectbox("Selecciona un Proyecto para Detallar Programación", df_programacion["Nombre Proyecto"])
+
+detalle_programacion = df_programacion[df_programacion["Nombre Proyecto"] == selected_programacion].iloc[0]
+st.markdown(f"""
+**Proyecto:** {detalle_programacion['Nombre Proyecto']}  
+**Inicio de Programación:** {detalle_programacion['Fecha Inicio Programación'].strftime('%d-%m-%Y')}  
+**Fin Estimado:** {detalle_programacion['Fecha Fin Programación'].strftime('%d-%m-%Y')}  
+**Estado:** {detalle_programacion['Estado Programación']}
+""")
+
+# Mensaje de advertencia para programaciones pendientes
+pendientes_programacion = len(df_programacion[df_programacion["Estado Programación"] == "Pendiente"])
+if pendientes_programacion > 0:
+    st.warning(f"Hay {pendientes_programacion} proyecto(s) pendiente(s) de programación.")
+
+# --------------------- Etapa 4: Ejecución ---------------------
+st.subheader("Etapa 4: Ejecución")
+st.markdown("Esta sección detalla el progreso de la ejecución de cada obra, incluyendo fechas y estados.")
+
+# Simulación de datos para la etapa de ejecución
+ejecucion_data = {
+    "ID Proyecto": [1, 2, 3],
+    "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
+    "Fecha Inicio Ejecución": ["2023-02-01", "2023-03-11", "2023-04-16"],
+    "Fecha Fin Ejecución": ["2023-03-01", "2023-04-20", "2023-05-30"],
+    "Estado Ejecución": ["Completado", "En Progreso", "Pendiente"],
+    "Porcentaje Avance (%)": [100, 60, 0],
+}
+df_ejecucion = pd.DataFrame(ejecucion_data)
+
+# Conversión de fechas a formato datetime
+df_ejecucion["Fecha Inicio Ejecución"] = pd.to_datetime(df_ejecucion["Fecha Inicio Ejecución"])
+df_ejecucion["Fecha Fin Ejecución"] = pd.to_datetime(df_ejecucion["Fecha Fin Ejecución"])
+
+# Mostrar tabla de ejecución
+st.markdown("### Información de Ejecución por Proyecto")
+st.dataframe(df_ejecucion, use_container_width=True)
+
+# Gráfico de avance de ejecución
+fig_ejecucion = px.bar(
+    df_ejecucion,
+    x="Nombre Proyecto",
+    y="Porcentaje Avance (%)",
+    title="Avance de Ejecución por Proyecto",
+    color="Estado Ejecución",
+    color_discrete_map={
+        "Completado": "green",
+        "En Progreso": "orange",
+        "Pendiente": "red",
+    },
+    text="Porcentaje Avance (%)",
+)
+st.plotly_chart(fig_ejecucion, use_container_width=True)
+
+# Detalle de proyectos en ejecución
+selected_ejecucion = st.selectbox("Selecciona un Proyecto para Detallar Ejecución", df_ejecucion["Nombre Proyecto"])
+
+detalle_ejecucion = df_ejecucion[df_ejecucion["Nombre Proyecto"] == selected_ejecucion].iloc[0]
+st.markdown(f"""
+**Proyecto:** {detalle_ejecucion['Nombre Proyecto']}  
+**Inicio de Ejecución:** {detalle_ejecucion['Fecha Inicio Ejecución'].strftime('%d-%m-%Y')}  
+**Fin Estimado:** {detalle_ejecucion['Fecha Fin Ejecución'].strftime('%d-%m-%Y')}  
+**Estado:** {detalle_ejecucion['Estado Ejecución']}  
+**Porcentaje de Avance:** {detalle_ejecucion['Porcentaje Avance (%)']}%
+""")
+
+# Mensaje de advertencia para ejecuciones pendientes
+pendientes_ejecucion = len(df_ejecucion[df_ejecucion["Estado Ejecución"] == "Pendiente"])
+if pendientes_ejecucion > 0:
+    st.warning(f"Hay {pendientes_ejecucion} proyecto(s) pendiente(s) de ejecución.")
