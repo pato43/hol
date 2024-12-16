@@ -119,3 +119,126 @@ elif tabs == "Generar Reporte PDF":
     """)
     if st.button("Generar Reporte PDF"):
         generar_pdf()
+# --------------------- Etapa 4: Ejecución y Monitoreo ---------------------
+st.subheader("Etapa 4: Ejecución y Monitoreo")
+st.markdown("En esta sección se realiza el seguimiento de la ejecución de los proyectos y se detectan posibles anomalías.")
+
+# Simulación de datos para la etapa de ejecución
+ejecucion_data = {
+    "ID Proyecto": [1, 2, 3],
+    "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
+    "Progreso (%)": [100, 65, 30],
+    "Desviación Presupuesto (%)": [5, -2, 10],
+    "Retraso Días": [0, 5, 15],
+    "Estado General": ["Finalizado", "En Progreso", "Retrasado"],
+}
+df_ejecucion = pd.DataFrame(ejecucion_data)
+
+# Mostrar tabla de ejecución
+st.markdown("### Información de Ejecución por Proyecto")
+st.dataframe(df_ejecucion, use_container_width=True)
+
+# Gráfico de progreso por proyecto
+fig_ejecucion = px.bar(
+    df_ejecucion,
+    x="Nombre Proyecto",
+    y="Progreso (%)",
+    title="Progreso de Ejecución por Proyecto",
+    color="Estado General",
+    color_discrete_map={
+        "Finalizado": "green",
+        "En Progreso": "orange",
+        "Retrasado": "red",
+    },
+    text_auto=True,
+)
+st.plotly_chart(fig_ejecucion, use_container_width=True)
+
+# Filtro para seleccionar un proyecto específico
+selected_ejecucion = st.selectbox("Selecciona un Proyecto para Detallar Ejecución", df_ejecucion["Nombre Proyecto"])
+
+detalle_ejecucion = df_ejecucion[df_ejecucion["Nombre Proyecto"] == selected_ejecucion].iloc[0]
+st.markdown(f"""
+**Proyecto:** {detalle_ejecucion['Nombre Proyecto']}  
+**Progreso:** {detalle_ejecucion['Progreso (%)']}%  
+**Desviación Presupuesto:** {detalle_ejecucion['Desviación Presupuesto (%)']}%  
+**Retraso:** {detalle_ejecucion['Retraso Días']} días  
+**Estado General:** {detalle_ejecucion['Estado General']}
+""")
+
+# Advertencias sobre anomalías en ejecución
+anomalías = df_ejecucion[(df_ejecucion["Desviación Presupuesto (%)"].abs() > 10) | (df_ejecucion["Retraso Días"] > 10)]
+if not anomalías.empty:
+    st.warning(f"⚠️ Se detectaron {len(anomalías)} anomalías en la ejecución de los proyectos.")
+    st.dataframe(anomalías, use_container_width=True)
+
+# --------------------- Detección de Anomalías ---------------------
+st.subheader("Detección de Anomalías y Alertas")
+st.markdown("En esta sección se generan alertas automáticas basadas en datos simulados para identificar posibles problemas en tiempo real.")
+
+# Simulación de datos de anomalías
+alertas_data = {
+    "ID Proyecto": [2, 3],
+    "Nombre Proyecto": ["Planta Industrial B", "Residencial C"],
+    "Tipo Anomalía": ["Retraso Extremo", "Sobrecosto Significativo"],
+    "Descripción": ["Retraso acumulado de 5 días", "Incremento del 10% sobre el presupuesto"],
+    "Nivel de Alerta": ["Media", "Alta"],
+}
+df_alertas = pd.DataFrame(alertas_data)
+
+# Mostrar tabla de alertas
+st.markdown("### Alertas Detectadas")
+st.dataframe(df_alertas, use_container_width=True)
+
+# Gráfico ilustrativo de alertas
+fig_alertas = px.pie(
+    df_alertas,
+    names="Nivel de Alerta",
+    title="Distribución de Niveles de Alerta",
+    color="Nivel de Alerta",
+    color_discrete_map={
+        "Alta": "red",
+        "Media": "orange",
+        "Baja": "green",
+    },
+)
+st.plotly_chart(fig_alertas, use_container_width=True)
+
+# --------------------- Generar Reporte en PDF ---------------------
+st.subheader("Generación de Reporte en PDF")
+st.markdown("Puedes generar un reporte del seguimiento de proyectos, incluyendo gráficos e información relevante.")
+
+from fpdf import FPDF
+
+def generar_reporte_pdf():
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    # Título
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(200, 10, txt="Reporte de Seguimiento de Proyectos", ln=True, align="C")
+    pdf.ln(10)
+    
+    # Sección de Ejecución
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, txt="Etapa 4: Ejecución y Monitoreo", ln=True)
+    pdf.set_font("Arial", size=10)
+    for index, row in df_ejecucion.iterrows():
+        pdf.cell(200, 10, txt=f"Proyecto: {row['Nombre Proyecto']}, Progreso: {row['Progreso (%)']}%, Retraso: {row['Retraso Días']} días, Estado: {row['Estado General']}", ln=True)
+    pdf.ln(10)
+    
+    # Sección de Alertas
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, txt="Detección de Anomalías", ln=True)
+    pdf.set_font("Arial", size=10)
+    for index, row in df_alertas.iterrows():
+        pdf.cell(200, 10, txt=f"Proyecto: {row['Nombre Proyecto']}, Tipo: {row['Tipo Anomalía']}, Nivel: {row['Nivel de Alerta']}", ln=True)
+
+    # Guardar PDF
+    pdf.output("reporte_proyectos.pdf")
+    st.success("Reporte generado exitosamente: 'reporte_proyectos.pdf'")
+
+# Botón para generar PDF
+if st.button("Generar Reporte PDF"):
+    generar_reporte_pdf()
