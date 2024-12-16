@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+from fpdf import FPDF
 
 # Configuración inicial del Dashboard
 st.set_page_config(
@@ -37,38 +38,16 @@ if tabs == "Inicio":
         - **Programación de Obra**
         - **Ejecución y Monitoreo**
         - **Generación de Reportes**
-        
+
         Utiliza los gráficos interactivos y herramientas disponibles para analizar el progreso.
         """
     )
 
-# --------------------- Pestañas Condicionales ---------------------
-elif tabs == "Etapa 1: Levantamiento":
-    # Incluye el código de levantamiento aquí (ya compartido anteriormente).
-
-elif tabs == "Etapa 2: Cotización":
-    # Incluye el código de cotización aquí (ya compartido anteriormente).
-
-elif tabs == "Etapa 3: Programación de Obra":
-    # Incluye el código de programación aquí (ya compartido anteriormente).
-
-elif tabs == "Etapa 4: Ejecución y Monitoreo":
-    # Incluye el código de ejecución aquí (ya compartido anteriormente).
-
-elif tabs == "Generar Reporte PDF":
-    st.subheader("Generar Reporte PDF")
-    st.markdown("Haz clic en el botón para generar un reporte en formato PDF con los datos actuales de levantamiento.")
-
-    if st.button("Generar Reporte PDF"):
-        pdf = generar_pdf(df_levantamiento)
-        pdf.output("reporte_seguimiento.pdf")
-        st.success("¡Reporte PDF generado correctamente! Descarga el archivo desde la carpeta de ejecución.")
 # --------------------- Pestaña: Etapa 1: Levantamiento ---------------------
 elif tabs == "Etapa 1: Levantamiento":
     st.subheader("Etapa 1: Levantamiento de Información")
     st.markdown("En esta sección se detalla el estado y progreso de los levantamientos iniciales por proyecto.")
 
-    # Simulación de datos para la etapa de levantamiento
     levantamiento_data = {
         "ID Proyecto": [1, 2, 3],
         "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
@@ -78,16 +57,12 @@ elif tabs == "Etapa 1: Levantamiento":
         "Estado Levantamiento": ["Completado", "En Progreso", "Pendiente"],
     }
     df_levantamiento = pd.DataFrame(levantamiento_data)
-
-    # Conversión de fechas a formato datetime
     df_levantamiento["Fecha Inicio Levantamiento"] = pd.to_datetime(df_levantamiento["Fecha Inicio Levantamiento"])
     df_levantamiento["Fecha Fin Levantamiento"] = pd.to_datetime(df_levantamiento["Fecha Fin Levantamiento"])
 
-    # Mostrar tabla de levantamiento
     st.markdown("### Información de Levantamiento por Proyecto")
     st.dataframe(df_levantamiento, use_container_width=True)
 
-    # Gráfico de estado del levantamiento
     fig_levantamiento = px.bar(
         df_levantamiento,
         x="Nombre Proyecto",
@@ -99,13 +74,10 @@ elif tabs == "Etapa 1: Levantamiento":
     )
     st.plotly_chart(fig_levantamiento, use_container_width=True)
 
-    # Filtro para seleccionar proyectos específicos en la etapa de levantamiento
     selected_levantamiento = st.selectbox(
         "Selecciona un Proyecto para Detallar Levantamiento", 
         df_levantamiento["Nombre Proyecto"]
     )
-
-    # Mostrar información detallada del proyecto seleccionado
     detalle_levantamiento = df_levantamiento[df_levantamiento["Nombre Proyecto"] == selected_levantamiento].iloc[0]
     st.markdown(f"""
     **Proyecto:** {detalle_levantamiento['Nombre Proyecto']}  
@@ -115,36 +87,9 @@ elif tabs == "Etapa 1: Levantamiento":
     **Estado:** {detalle_levantamiento['Estado Levantamiento']}
     """)
 
-    # Mensaje de advertencia para proyectos pendientes
     total_pendientes = len(df_levantamiento[df_levantamiento["Estado Levantamiento"] == "Pendiente"])
     if total_pendientes > 0:
         st.warning(f"Hay {total_pendientes} proyecto(s) pendiente(s) de levantamiento.")
-from fpdf import FPDF  # Librería para generar PDFs
-
-# Función para generar PDF
-def generar_pdf(df_levantamiento):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Reporte de Seguimiento de Proyectos", ln=True, align="C")
-    pdf.cell(200, 10, txt="Generado por Holman Service México", ln=True, align="C")
-    pdf.ln(10)
-    pdf.set_font("Arial", size=10)
-
-    # Agregar datos de levantamiento al PDF
-    pdf.cell(0, 10, txt="Resumen de Levantamiento:", ln=True)
-    for i, row in df_levantamiento.iterrows():
-        pdf.cell(0, 10, txt=f"- Proyecto: {row['Nombre Proyecto']} | Estado: {row['Estado Levantamiento']}", ln=True)
-    return pdf
-# --------------------- Pestaña: Generar Reporte PDF ---------------------
-elif tabs == "Generar Reporte PDF":
-    st.subheader("Generar Reporte PDF")
-    st.markdown("Haz clic en el botón para generar un reporte en formato PDF con los datos actuales de levantamiento.")
-
-    if st.button("Generar Reporte PDF"):
-        pdf = generar_pdf(df_levantamiento)
-        pdf.output("reporte_seguimiento.pdf")
-        st.success("¡Reporte PDF generado correctamente! Descarga el archivo desde la carpeta de ejecución.")
 # --------------------- Etapa 2: Cotización ---------------------
 elif tabs == "Etapa 2: Cotización":
     st.subheader("Etapa 2: Cotización")
@@ -153,7 +98,6 @@ elif tabs == "Etapa 2: Cotización":
         "considerando materiales, mano de obra, equipos y otros insumos necesarios."
     )
 
-    # Simulación de datos para cotización
     cotizacion_data = {
         "Concepto": ["Materiales", "Mano de Obra", "Equipos", "Transporte", "Imprevistos"],
         "Costo Unitario (MXN)": [50000, 30000, 15000, 8000, 5000],
@@ -162,15 +106,12 @@ elif tabs == "Etapa 2: Cotización":
     cotizacion_df = pd.DataFrame(cotizacion_data)
     cotizacion_df["Costo Total (MXN)"] = cotizacion_df["Costo Unitario (MXN)"] * cotizacion_df["Cantidad"]
 
-    # Mostrar tabla de cotización
     st.markdown("### Tabla de Costos por Concepto")
     st.dataframe(cotizacion_df, use_container_width=True)
 
-    # Mostrar costos totales
-    st.markdown("### Costo Total del Proyecto")
     costo_total = cotizacion_df["Costo Total (MXN)"].sum()
-    st.write(f"El costo total estimado del proyecto es **MXN {costo_total:,.2f}**.")
-    # Gráfico de distribución de costos
+    st.markdown(f"### Costo Total del Proyecto: **MXN {costo_total:,.2f}**")
+
     fig_cotizacion = px.pie(
         cotizacion_df,
         names="Concepto",
@@ -179,14 +120,10 @@ elif tabs == "Etapa 2: Cotización":
         color_discrete_sequence=px.colors.sequential.RdBu
     )
     st.plotly_chart(fig_cotizacion, use_container_width=True)
+
 # --------------------- Etapa 3: Programación de Obra ---------------------
 elif tabs == "Etapa 3: Programación de Obra":
     st.subheader("Etapa 3: Programación de Obra")
-    st.markdown(
-        "Esta etapa organiza las actividades y tiempos del proyecto en un cronograma estructurado, asegurando una ejecución eficiente y controlada."
-    )
-
-    # Simulación de cronograma
     cronograma_data = {
         "Actividad": [
             "Preparación del Terreno",
@@ -213,11 +150,9 @@ elif tabs == "Etapa 3: Programación de Obra":
     }
     cronograma_df = pd.DataFrame(cronograma_data)
 
-    # Mostrar cronograma
     st.markdown("### Cronograma de Actividades")
     st.dataframe(cronograma_df, use_container_width=True)
 
-    # Gráfico de Gantt
     fig_gantt = px.timeline(
         cronograma_df,
         x_start="Inicio Estimado",
@@ -225,61 +160,22 @@ elif tabs == "Etapa 3: Programación de Obra":
         y="Actividad",
         title="Cronograma de Obra",
         color="Actividad",
-        labels={"Actividad": "Tareas", "Inicio Estimado": "Inicio", "Fin Estimado": "Fin"}
+        labels={"Actividad": "Tareas"}
     )
     fig_gantt.update_yaxes(categoryorder="total ascending")
     st.plotly_chart(fig_gantt, use_container_width=True)
-# --------------------- Etapa 4: Ejecución y Monitoreo ---------------------
-elif tabs == "Etapa 4: Ejecución y Monitoreo":
-    st.subheader("Etapa 4: Ejecución y Monitoreo")
-    st.markdown("En esta sección se realiza el seguimiento de la ejecución de los proyectos y se detectan posibles anomalías.")
 
-    # Simulación de datos de ejecución
-    ejecucion_data = {
-        "ID Proyecto": [1, 2, 3],
-        "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
-        "Progreso (%)": [100, 65, 30],
-        "Desviación Presupuesto (%)": [5, -2, 10],
-        "Retraso Días": [0, 5, 15],
-        "Estado General": ["Finalizado", "En Progreso", "Retrasado"],
-    }
-    df_ejecucion = pd.DataFrame(ejecucion_data)
-
-    # Mostrar tabla de ejecución
-    st.markdown("### Información de Ejecución por Proyecto")
-    st.dataframe(df_ejecucion, use_container_width=True)
-
-    # Gráfico de progreso por proyecto
-    fig_ejecucion = px.bar(
-        df_ejecucion,
-        x="Nombre Proyecto",
-        y="Progreso (%)",
-        title="Progreso de Ejecución por Proyecto",
-        color="Estado General",
-        color_discrete_map={
-            "Finalizado": "green",
-            "En Progreso": "orange",
-            "Retrasado": "red",
-        },
-        text_auto=True,
-    )
-    st.plotly_chart(fig_ejecucion, use_container_width=True)
-
-    # Filtro para seleccionar un proyecto específico
-    selected_ejecucion = st.selectbox("Selecciona un Proyecto para Detallar Ejecución", df_ejecucion["Nombre Proyecto"])
-    detalle_ejecucion = df_ejecucion[df_ejecucion["Nombre Proyecto"] == selected_ejecucion].iloc[0]
-    st.markdown(f"""
-    **Proyecto:** {detalle_ejecucion['Nombre Proyecto']}  
-    **Progreso:** {detalle_ejecucion['Progreso (%)']}%  
-    **Desviación Presupuesto:** {detalle_ejecucion['Desviación Presupuesto (%)']}%  
-    **Retraso:** {detalle_ejecucion['Retraso Días']} días  
-    **Estado General:** {detalle_ejecucion['Estado General']}
-    """)
-
-    # Advertencias sobre anomalías
-    anomalías = df_ejecucion[(df_ejecucion["Desviación Presupuesto (%)"].abs() > 10) | (df_ejecucion["Retraso Días"] > 10)]
-    if not anomalías.empty:
-        st.warning(f"⚠️ Se detectaron {len(anomalías)} anomalías en la ejecución de los proyectos.")
-        st.dataframe(anomalías, use_container_width=True)
-    else:
-        st.success("✅ No se detectaron anomalías en la ejecución de los proyectos.")
+# --------------------- Generar Reporte PDF ---------------------
+elif tabs == "Generar Reporte PDF":
+    st.subheader("Generar Reporte PDF")
+    if st.button("Generar Reporte PDF"):
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt="Reporte de Seguimiento de Proyectos", ln=True, align="C")
+        pdf.cell(200, 10, txt="Generado por Holman Service México", ln=True, align="C")
+        pdf.ln(10)
+        for i, row in df_levantamiento.iterrows():
+            pdf.cell(0, 10, txt=f"- Proyecto: {row['Nombre Proyecto']} | Estado: {row['Estado Levantamiento']}", ln=True)
+        pdf.output("reporte_seguimiento.pdf")
+        st.success("¡Reporte PDF generado correctamente!")
