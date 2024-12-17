@@ -28,6 +28,10 @@ tabs = st.sidebar.radio(
      "Pago de la Obra", "Generar Factura", "Generar Reporte PDF")
 )
 
+# Inicializar estado global de la factura seleccionada
+if "factura_detalle" not in st.session_state:
+    st.session_state["factura_detalle"] = None
+
 # --------------------- Pestaña: Inicio ---------------------
 if tabs == "Inicio":
     st.subheader("📌 Introducción")
@@ -77,7 +81,7 @@ elif tabs == "Factura Simulada":
 
     # Filtrar factura por número
     factura_seleccionada = st.selectbox(
-        "Selecciona una factura para ver detalles", df_factura["Factura"]
+        "Selecciona una factura para ver detalles", options=[""] + list(df_factura["Factura"])
     )
 
     # Verificar y almacenar los detalles de la factura seleccionada
@@ -92,6 +96,8 @@ elif tabs == "Factura Simulada":
         **Estado de Pago:** {factura_detalle['Estado de Pago']}  
         **Productos/Servicios:** {factura_detalle['Productos']}
         """)
+    elif st.session_state["factura_detalle"] is not None:
+        st.markdown("Se está utilizando la última factura seleccionada previamente.")
     else:
         st.warning("Por favor, selecciona una factura válida para proceder.")
 
@@ -107,6 +113,35 @@ elif tabs == "Factura Simulada":
     st.markdown("8. **Pago de la Obra:** El estado de pago se usa para activar el siguiente paso del proyecto.")
 
     st.success("Los procesos están automatizados basándose en los datos de la factura seleccionada.")
+
+# --------------------- Pestaña: Levantamiento ---------------------
+elif tabs == "Etapa 1: Levantamiento":
+    st.subheader("Etapa 1: Levantamiento de Información")
+    st.markdown("En esta sección se detalla el estado y progreso de los levantamientos iniciales por proyecto.")
+
+    # Verificar si hay una factura seleccionada
+    if st.session_state["factura_detalle"] is not None:
+        productos_relacionados = st.session_state["factura_detalle"]["Productos"]
+    else:
+        productos_relacionados = "No disponible (sin factura seleccionada)"
+
+    # Simulación de datos de levantamiento
+    levantamiento_data = {
+        "ID Proyecto": [1, 2, 3],
+        "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
+        "Responsable": ["Arq. Pérez", "Ing. López", "Arq. Martínez"],
+        "Estado Levantamiento": ["Completado", "En Progreso", "Pendiente"],
+        "Productos Relacionados": [productos_relacionados] * 3
+    }
+    df_levantamiento = pd.DataFrame(levantamiento_data)
+
+    st.markdown("### Información de Levantamiento por Proyecto")
+    st.dataframe(df_levantamiento, use_container_width=True)
+
+    # Mensaje de advertencia para proyectos pendientes
+    total_pendientes = len(df_levantamiento[df_levantamiento["Estado Levantamiento"] == "Pendiente"])
+    if total_pendientes > 0:
+        st.warning(f"Hay {total_pendientes} proyecto(s) pendiente(s) de levantamiento.")
 
 # --------------------- Etapa 2: Cotización ---------------------
 elif tabs == "Etapa 2: Cotización":
