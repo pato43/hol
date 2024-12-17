@@ -284,6 +284,74 @@ elif tabs == "Etapa 3: Programación de Obra":
     )
     st.plotly_chart(fig_costos, use_container_width=True)
 
+# --------------------- Etapa 4: Ejecución y Monitoreo ---------------------
+elif tabs == "Etapa 4: Ejecución y Monitoreo":
+    st.subheader("Etapa 4: Ejecución y Monitoreo")
+    st.markdown(
+        "En esta etapa se realiza el seguimiento del progreso del proyecto, "
+        "así como la entrega de documentación asociada."
+    )
+
+    # Simulación de datos de ejecución
+    ejecucion_data = {
+        "ID Proyecto": [1, 2, 3],
+        "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
+        "Progreso (%)": [100, 65, 30],
+        "Documentos Entregados": [
+            "Planos, Contratos, Reporte de Sueldos",
+            "Planos, Contratos",
+            "Pendiente"
+        ],
+        "Estado General": ["Finalizado", "En Progreso", "Retrasado"],
+    }
+    df_ejecucion = pd.DataFrame(ejecucion_data)
+
+    st.markdown("### Estado de Ejecución por Proyecto")
+    st.dataframe(df_ejecucion, use_container_width=True)
+
+    # Gráfico de progreso por proyecto
+    fig_ejecucion = px.bar(
+        df_ejecucion,
+        x="Nombre Proyecto",
+        y="Progreso (%)",
+        title="Progreso de Ejecución por Proyecto",
+        color="Estado General",
+        color_discrete_map={"Finalizado": "green", "En Progreso": "orange", "Retrasado": "red"},
+        text_auto=True,
+    )
+    st.plotly_chart(fig_ejecucion, use_container_width=True)
+
+    # Selección de proyecto para detalles
+    proyecto_seleccionado = st.selectbox("Selecciona un Proyecto para Ver Detalles", df_ejecucion["Nombre Proyecto"])
+    detalle_ejecucion = df_ejecucion[df_ejecucion["Nombre Proyecto"] == proyecto_seleccionado].iloc[0]
+    st.markdown(f"""
+    **Proyecto:** {detalle_ejecucion['Nombre Proyecto']}  
+    **Progreso:** {detalle_ejecucion['Progreso (%)']}%  
+    **Documentos Entregados:** {detalle_ejecucion['Documentos Entregados']}  
+    **Estado General:** {detalle_ejecucion['Estado General']}
+    """)
+
+# --------------------- Etapa de Pago ---------------------
+elif tabs == "Pago de la Obra":
+    st.subheader("Etapa 5: Pago de la Obra")
+    st.markdown("Control del estado de pago según la factura seleccionada.")
+
+    # Estado del pago basado en la factura seleccionada
+    if "factura_detalle" in locals() and not factura_detalle.empty:
+        st.markdown("### Información de la Factura Seleccionada")
+        st.markdown(f"""
+        **Factura:** {factura_detalle['Factura']}  
+        **Monto Total:** MXN {factura_detalle['Monto Total (MXN)']:,.2f}  
+        **Estado de Pago:** {factura_detalle['Estado de Pago']}
+        """)
+
+        if factura_detalle["Estado de Pago"] == "Pendiente":
+            st.warning("El pago aún está pendiente.")
+        else:
+            st.success("El pago ha sido completado.")
+    else:
+        st.error("No se ha seleccionado una factura válida para verificar el estado de pago.")
+
 # --------------------- Generación del Reporte PDF ---------------------
 elif tabs == "Generar Reporte PDF":
     st.subheader("Generar Reporte PDF")
@@ -317,7 +385,7 @@ elif tabs == "Generar Reporte PDF":
         pdf.cell(200, 10, txt="Etapa 1: Levantamiento", ln=True)
         pdf.set_font("Arial", size=10)
         if "df_levantamiento" in locals() and not df_levantamiento.empty:
-            for i, row in df_levantamiento.iterrows():
+            for _, row in df_levantamiento.iterrows():
                 pdf.cell(0, 10, txt=f"- Proyecto: {row['Nombre Proyecto']} | Estado: {row['Estado Levantamiento']}", ln=True)
             pdf.ln(10)
 
@@ -326,7 +394,7 @@ elif tabs == "Generar Reporte PDF":
         pdf.cell(200, 10, txt="Etapa 2: Cotización", ln=True)
         pdf.set_font("Arial", size=10)
         if "df_cotizacion" in locals() and not df_cotizacion.empty:
-            for i, row in df_cotizacion.iterrows():
+            for _, row in df_cotizacion.iterrows():
                 pdf.cell(
                     0, 10,
                     txt=f"Producto: {row['Producto']} | Costo Unitario: MXN {row['Costo Unitario (MXN)']:,.2f} | "
@@ -340,7 +408,7 @@ elif tabs == "Generar Reporte PDF":
         pdf.cell(200, 10, txt="Etapa 3: Programación de Obra", ln=True)
         pdf.set_font("Arial", size=10)
         if "cronograma_df" in locals() and not cronograma_df.empty:
-            for i, row in cronograma_df.iterrows():
+            for _, row in cronograma_df.iterrows():
                 pdf.cell(
                     0, 10,
                     txt=f"Actividad: {row['Actividad']} | Duración: {row['Duración (días)']} días | "
@@ -351,8 +419,16 @@ elif tabs == "Generar Reporte PDF":
 
         return pdf
 
+    # Generar y descargar el PDF
     if st.button("Generar Reporte PDF"):
         pdf = generar_reporte_pdf()
         pdf_path = "reporte_completo.pdf"
         pdf.output(pdf_path)
-        st.success(f"¡Reporte PDF generado correctamente! Puedes descargarlo [aquí](./{pdf_path}).")
+        with open(pdf_path, "rb") as file:
+            btn = st.download_button(
+                label="Descargar Reporte PDF",
+                data=file,
+                file_name="reporte_completo.pdf",
+                mime="application/pdf"
+            )
+        st.success("¡Reporte PDF generado correctamente!")
