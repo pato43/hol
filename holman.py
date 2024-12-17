@@ -46,54 +46,6 @@ if tabs == "Inicio":
         """
     )
 
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-from datetime import datetime
-from fpdf import FPDF
-
-# Configuración inicial del Dashboard
-st.set_page_config(
-    page_title="Dashboard de Proyectos - Holtmont México",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Título principal del Dashboard
-st.title("Dashboard de Seguimiento de Proyectos 📊")
-st.markdown(
-    """
-    Bienvenido al **Dashboard de Seguimiento de Proyectos** de **Holtmont México**.  
-    Este sistema permite visualizar el avance de los proyectos, gestionar datos, analizar anomalías y generar reportes.
-    """
-)
-
-# Barra lateral con pestañas
-tabs = st.sidebar.radio(
-    "Navegación por etapas:",
-    ("Inicio", "Factura Simulada", "Etapa 1: Levantamiento", "Etapa 2: Cotización", 
-     "Etapa 3: Programación de Obra", "Etapa 4: Ejecución y Monitoreo", 
-     "Pago de la Obra", "Generar Factura", "Generar Reporte PDF")
-)
-
-# --------------------- Pestaña: Inicio ---------------------
-if tabs == "Inicio":
-    st.subheader("📌 Introducción")
-    st.markdown(
-        """
-        Este dashboard permite supervisar las etapas principales de un proyecto de construcción:
-        - **Levantamiento de Información**
-        - **Cotización**
-        - **Orden de Compra**
-        - **Compra de Materiales**
-        - **Programación de Obra**
-        - **Ejecución de la Obra**
-        - **Pago de la Obra**
-
-        Todos los procesos se automatizan a partir de los datos de una **factura simulada**.
-        """
-    )
-
 # --------------------- Pestaña: Factura Simulada ---------------------
 elif tabs == "Factura Simulada":
     st.subheader("Factura Simulada")
