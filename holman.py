@@ -6,7 +6,7 @@ from fpdf import FPDF
 
 # Configuración inicial del Dashboard
 st.set_page_config(
-    page_title="Dashboard de Seguimiento de Proyectos - Holman Service México (DEMO)",
+    page_title="Dashboard de Seguimiento de Proyectos - Holtmont Services (DEMO)",
     layout="wide",
     initial_sidebar_state="expanded"
 )
