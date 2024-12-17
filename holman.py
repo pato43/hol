@@ -138,30 +138,35 @@ elif tabs == "Etapa 1: Levantamiento":
     total_pendientes = len(df_levantamiento[df_levantamiento["Estado Levantamiento"] == "Pendiente"])
     if total_pendientes > 0:
         st.warning(f"Hay {total_pendientes} proyecto(s) pendiente(s) de levantamiento.")
-
 # --------------------- Etapa 2: Cotización ---------------------
 elif tabs == "Etapa 2: Cotización":
     st.subheader("Etapa 2: Cotización")
     st.markdown("En esta etapa se genera la cotización automática basada en los productos de la factura seleccionada.")
 
-    # Verificar que se haya seleccionado una factura válida
+    # Validar si hay una factura seleccionada y extraer productos relacionados
     if "factura_detalle" in locals() and not factura_detalle.empty:
         productos_relacionados = factura_detalle.get("Productos", "")
-        if not isinstance(productos_relacionados, str):
-            productos_relacionados = "Datos no disponibles"
+        if not isinstance(productos_relacionados, str) or not productos_relacionados.strip():
+            productos_relacionados = "Sin productos relacionados"
     else:
-        st.error("Por favor, selecciona una factura válida en la sección anterior para continuar.")
+        st.error("Por favor, selecciona una factura válida en la sección anterior para generar la cotización.")
         productos_relacionados = "Sin productos relacionados"
 
     # Simulación de costos para los productos en la factura seleccionada
     productos = productos_relacionados.split(", ") if isinstance(productos_relacionados, str) else []
     if productos:
-        costos_unitarios = [50000, 30000, 15000]  # Simulación de costos
-        cantidades = [10, 5, 8]  # Simulación de cantidades
+        st.markdown("### Productos Relacionados")
+        for idx, producto in enumerate(productos, 1):
+            st.markdown(f"{idx}. {producto}")
+
+        # Simulación de costos y cantidades
+        costos_unitarios = [50000, 30000, 15000, 20000, 10000][:len(productos)]  # Costos simulados
+        cantidades = [5, 10, 7, 3, 8][:len(productos)]  # Cantidades simuladas
+
         cotizacion_data = {
-            "Producto": productos[:len(costos_unitarios)],  # Limitar a la cantidad de costos simulados
-            "Costo Unitario (MXN)": costos_unitarios[:len(productos)],
-            "Cantidad": cantidades[:len(productos)],
+            "Producto": productos,
+            "Costo Unitario (MXN)": costos_unitarios,
+            "Cantidad": cantidades,
         }
         df_cotizacion = pd.DataFrame(cotizacion_data)
         df_cotizacion["Costo Total (MXN)"] = df_cotizacion["Costo Unitario (MXN)"] * df_cotizacion["Cantidad"]
@@ -172,5 +177,43 @@ elif tabs == "Etapa 2: Cotización":
         # Mostrar costos totales
         costo_total_cotizacion = df_cotizacion["Costo Total (MXN)"].sum()
         st.markdown(f"### Costo Total de la Cotización: **MXN {costo_total_cotizacion:,.2f}**")
+
+        # Detalle por producto
+        st.markdown("### Detalles de Costos por Producto")
+        for _, row in df_cotizacion.iterrows():
+            st.markdown(
+                f"- **Producto:** {row['Producto']}  
+                **Costo Unitario:** MXN {row['Costo Unitario (MXN)']:,.2f}  
+                **Cantidad:** {row['Cantidad']}  
+                **Costo Total:** MXN {row['Costo Total (MXN)']:,.2f}"
+            )
     else:
         st.warning("No se encontraron productos relacionados en la factura seleccionada.")
+
+    # Sección interactiva para simular ajustes de costos
+    st.markdown("### Ajustes de Cotización")
+    st.markdown("Puedes modificar los costos unitarios y cantidades estimadas para analizar diferentes escenarios.")
+    for idx, producto in enumerate(productos):
+        nuevo_costo = st.number_input(
+            f"Costo Unitario para {producto} (MXN):",
+            min_value=0,
+            value=costos_unitarios[idx],
+            step=1000
+        )
+        nueva_cantidad = st.number_input(
+            f"Cantidad para {producto}:",
+            min_value=0,
+            value=cantidades[idx],
+            step=1
+        )
+        df_cotizacion.loc[idx, "Costo Unitario (MXN)"] = nuevo_costo
+        df_cotizacion.loc[idx, "Cantidad"] = nueva_cantidad
+        df_cotizacion.loc[idx, "Costo Total (MXN)"] = nuevo_costo * nueva_cantidad
+
+    # Mostrar tabla de cotización actualizada
+    st.markdown("### Cotización Ajustada")
+    st.dataframe(df_cotizacion, use_container_width=True)
+
+    # Calcular nuevo costo total
+    costo_total_actualizado = df_cotizacion["Costo Total (MXN)"].sum()
+    st.markdown(f"### Nuevo Costo Total de la Cotización: **MXN {costo_total_actualizado:,.2f}**")
