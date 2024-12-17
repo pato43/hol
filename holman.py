@@ -305,3 +305,107 @@ elif tabs == "Etapa 4: Ejecución y Monitoreo":
     **Documentos Entregados:** {detalle_ejecucion['Documentos Entregados']}  
     **Estado General:** {detalle_ejecucion['Estado General']}
     """)
+
+# --------------------- Etapa de Pago ---------------------
+elif tabs == "Pago de la Obra":
+    st.subheader("Etapa 5: Pago de la Obra")
+    st.markdown("Control del estado de pago según la factura seleccionada.")
+
+    # Estado del pago basado en la factura seleccionada
+    if st.session_state["factura_detalle"] is not None:
+        factura_detalle = st.session_state["factura_detalle"]
+        st.markdown("### Información de la Factura Seleccionada")
+        st.markdown(f"""
+        **Factura:** {factura_detalle['Factura']}  
+        **Monto Total:** MXN {factura_detalle['Monto Total (MXN)']:,.2f}  
+        **Estado de Pago:** {factura_detalle['Estado de Pago']}
+        """)
+
+        if factura_detalle["Estado de Pago"] == "Pendiente":
+            st.warning("El pago aún está pendiente.")
+        else:
+            st.success("El pago ha sido completado.")
+    else:
+        st.error("No se ha seleccionado una factura válida para verificar el estado de pago.")
+
+# --------------------- Generación del Reporte PDF ---------------------
+elif tabs == "Generar Reporte PDF":
+    st.subheader("Generar Reporte PDF")
+    st.markdown("Genera un reporte completo con todos los datos procesados del proyecto.")
+
+    def generar_reporte_pdf():
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+
+        # Título principal
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(200, 10, txt="Reporte de Seguimiento de Proyectos - Holtmont México", ln=True, align="C")
+        pdf.ln(10)
+
+        # Sección: Factura
+        if st.session_state["factura_detalle"] is not None:
+            factura_detalle = st.session_state["factura_detalle"]
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(200, 10, txt="Factura Simulada", ln=True)
+            pdf.set_font("Arial", size=10)
+            pdf.cell(
+                0, 10,
+                txt=f"Factura: {factura_detalle['Factura']} | Proveedor: {factura_detalle['Proveedor']} | "
+                    f"Monto Total: MXN {factura_detalle['Monto Total (MXN)']:,.2f} | Estado: {factura_detalle['Estado de Pago']}",
+                ln=True
+            )
+            pdf.ln(10)
+
+        # Sección: Levantamiento
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Etapa 1: Levantamiento", ln=True)
+        pdf.set_font("Arial", size=10)
+        if "df_levantamiento" in locals() and not df_levantamiento.empty:
+            for _, row in df_levantamiento.iterrows():
+                pdf.cell(0, 10, txt=f"- Proyecto: {row['Nombre Proyecto']} | Estado: {row['Estado Levantamiento']}", ln=True)
+            pdf.ln(10)
+
+        # Sección: Cotización
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Etapa 2: Cotización", ln=True)
+        pdf.set_font("Arial", size=10)
+        if "df_cotizacion" in locals() and not df_cotizacion.empty:
+            for _, row in df_cotizacion.iterrows():
+                pdf.cell(
+                    0, 10,
+                    txt=f"Producto: {row['Producto']} | Costo Unitario: MXN {row['Costo Unitario (MXN)']:,.2f} | "
+                        f"Cantidad: {row['Cantidad']} | Costo Total: MXN {row['Costo Total (MXN)']:,.2f}",
+                    ln=True
+                )
+            pdf.ln(10)
+
+        # Sección: Cronograma
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Etapa 3: Programación de Obra", ln=True)
+        pdf.set_font("Arial", size=10)
+        if "cronograma_df" in locals() and not cronograma_df.empty:
+            for _, row in cronograma_df.iterrows():
+                pdf.cell(
+                    0, 10,
+                    txt=f"Actividad: {row['Actividad']} | Duración: {row['Duración (días)']} días | "
+                        f"Costo Estimado: MXN {row['Costo Estimado (MXN)']:,.2f}",
+                    ln=True
+                )
+            pdf.ln(10)
+
+        return pdf
+
+    # Generar y descargar el PDF
+    if st.button("Generar Reporte PDF"):
+        pdf = generar_reporte_pdf()
+        pdf_path = "reporte_completo.pdf"
+        pdf.output(pdf_path)
+        with open(pdf_path, "rb") as file:
+            st.download_button(
+                label="Descargar Reporte PDF",
+                data=file,
+                file_name="reporte_completo.pdf",
+                mime="application/pdf"
+            )
+        st.success("¡Reporte PDF generado correctamente!")
