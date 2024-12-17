@@ -46,6 +46,54 @@ if tabs == "Inicio":
         """
     )
 
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from datetime import datetime
+from fpdf import FPDF
+
+# Configuración inicial del Dashboard
+st.set_page_config(
+    page_title="Dashboard de Proyectos - Holtmont México",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Título principal del Dashboard
+st.title("Dashboard de Seguimiento de Proyectos 📊")
+st.markdown(
+    """
+    Bienvenido al **Dashboard de Seguimiento de Proyectos** de **Holtmont México**.  
+    Este sistema permite visualizar el avance de los proyectos, gestionar datos, analizar anomalías y generar reportes.
+    """
+)
+
+# Barra lateral con pestañas
+tabs = st.sidebar.radio(
+    "Navegación por etapas:",
+    ("Inicio", "Factura Simulada", "Etapa 1: Levantamiento", "Etapa 2: Cotización", 
+     "Etapa 3: Programación de Obra", "Etapa 4: Ejecución y Monitoreo", 
+     "Pago de la Obra", "Generar Factura", "Generar Reporte PDF")
+)
+
+# --------------------- Pestaña: Inicio ---------------------
+if tabs == "Inicio":
+    st.subheader("📌 Introducción")
+    st.markdown(
+        """
+        Este dashboard permite supervisar las etapas principales de un proyecto de construcción:
+        - **Levantamiento de Información**
+        - **Cotización**
+        - **Orden de Compra**
+        - **Compra de Materiales**
+        - **Programación de Obra**
+        - **Ejecución de la Obra**
+        - **Pago de la Obra**
+
+        Todos los procesos se automatizan a partir de los datos de una **factura simulada**.
+        """
+    )
+
 # --------------------- Pestaña: Factura Simulada ---------------------
 elif tabs == "Factura Simulada":
     st.subheader("Factura Simulada")
@@ -80,9 +128,10 @@ elif tabs == "Factura Simulada":
         "Selecciona una factura para ver detalles", df_factura["Factura"]
     )
 
-    # Validar que los datos sean correctos antes de procesarlos
+    # Verificar y almacenar los detalles de la factura seleccionada
     if factura_seleccionada:
         factura_detalle = df_factura[df_factura["Factura"] == factura_seleccionada].iloc[0]
+        st.session_state["factura_detalle"] = factura_detalle
         st.markdown(f"""
         **Factura:** {factura_detalle['Factura']}  
         **Proveedor:** {factura_detalle['Proveedor']}  
@@ -92,7 +141,7 @@ elif tabs == "Factura Simulada":
         **Productos/Servicios:** {factura_detalle['Productos']}
         """)
     else:
-        st.error("Por favor, selecciona una factura válida.")
+        st.warning("Por favor, selecciona una factura válida para proceder.")
 
     # Automatización de los puntos basados en la factura
     st.markdown("### Procesos Automatizados a partir de la Factura")
@@ -107,37 +156,6 @@ elif tabs == "Factura Simulada":
 
     st.success("Los procesos están automatizados basándose en los datos de la factura seleccionada.")
 
-# --------------------- Etapa 1: Levantamiento ---------------------
-elif tabs == "Etapa 1: Levantamiento":
-    st.subheader("Etapa 1: Levantamiento de Información")
-    st.markdown("En esta sección se detalla el estado y progreso de los levantamientos iniciales por proyecto.")
-
-    # Verificar si la factura está disponible
-    if "df_factura" in globals() and not df_factura.empty:
-        productos_relacionados = factura_detalle.get("Productos", "")
-        if not isinstance(productos_relacionados, str):
-            productos_relacionados = "Datos no disponibles"
-    else:
-        productos_relacionados = "No disponible (sin factura seleccionada)"
-
-    # Simulación de datos de levantamiento
-    levantamiento_data = {
-        "ID Proyecto": [1, 2, 3],
-        "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
-        "Responsable": ["Arq. Pérez", "Ing. López", "Arq. Martínez"],
-        "Estado Levantamiento": ["Completado", "En Progreso", "Pendiente"],
-        "Productos Relacionados": [productos_relacionados] * 3
-    }
-    df_levantamiento = pd.DataFrame(levantamiento_data)
-
-    # Mostrar tabla de levantamiento
-    st.markdown("### Información de Levantamiento por Proyecto")
-    st.dataframe(df_levantamiento, use_container_width=True)
-
-    # Mensaje de advertencia para proyectos pendientes
-    total_pendientes = len(df_levantamiento[df_levantamiento["Estado Levantamiento"] == "Pendiente"])
-    if total_pendientes > 0:
-        st.warning(f"Hay {total_pendientes} proyecto(s) pendiente(s) de levantamiento.")
 # --------------------- Etapa 2: Cotización ---------------------
 elif tabs == "Etapa 2: Cotización":
     st.subheader("Etapa 2: Cotización")
