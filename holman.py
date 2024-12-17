@@ -138,3 +138,39 @@ elif tabs == "Etapa 1: Levantamiento":
     total_pendientes = len(df_levantamiento[df_levantamiento["Estado Levantamiento"] == "Pendiente"])
     if total_pendientes > 0:
         st.warning(f"Hay {total_pendientes} proyecto(s) pendiente(s) de levantamiento.")
+
+# --------------------- Etapa 2: Cotización ---------------------
+elif tabs == "Etapa 2: Cotización":
+    st.subheader("Etapa 2: Cotización")
+    st.markdown("En esta etapa se genera la cotización automática basada en los productos de la factura seleccionada.")
+
+    # Verificar que se haya seleccionado una factura válida
+    if "factura_detalle" in locals() and not factura_detalle.empty:
+        productos_relacionados = factura_detalle.get("Productos", "")
+        if not isinstance(productos_relacionados, str):
+            productos_relacionados = "Datos no disponibles"
+    else:
+        st.error("Por favor, selecciona una factura válida en la sección anterior para continuar.")
+        productos_relacionados = "Sin productos relacionados"
+
+    # Simulación de costos para los productos en la factura seleccionada
+    productos = productos_relacionados.split(", ") if isinstance(productos_relacionados, str) else []
+    if productos:
+        costos_unitarios = [50000, 30000, 15000]  # Simulación de costos
+        cantidades = [10, 5, 8]  # Simulación de cantidades
+        cotizacion_data = {
+            "Producto": productos[:len(costos_unitarios)],  # Limitar a la cantidad de costos simulados
+            "Costo Unitario (MXN)": costos_unitarios[:len(productos)],
+            "Cantidad": cantidades[:len(productos)],
+        }
+        df_cotizacion = pd.DataFrame(cotizacion_data)
+        df_cotizacion["Costo Total (MXN)"] = df_cotizacion["Costo Unitario (MXN)"] * df_cotizacion["Cantidad"]
+
+        st.markdown("### Cotización Detallada")
+        st.dataframe(df_cotizacion, use_container_width=True)
+
+        # Mostrar costos totales
+        costo_total_cotizacion = df_cotizacion["Costo Total (MXN)"].sum()
+        st.markdown(f"### Costo Total de la Cotización: **MXN {costo_total_cotizacion:,.2f}**")
+    else:
+        st.warning("No se encontraron productos relacionados en la factura seleccionada.")
