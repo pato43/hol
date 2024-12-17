@@ -219,3 +219,140 @@ elif tabs == "Etapa 2: Cotización":
     # Calcular nuevo costo total
     costo_total_actualizado = df_cotizacion["Costo Total (MXN)"].sum()
     st.markdown(f"### Nuevo Costo Total de la Cotización: **MXN {costo_total_actualizado:,.2f}**")
+# --------------------- Etapa 3: Programación de Obra ---------------------
+elif tabs == "Etapa 3: Programación de Obra":
+    st.subheader("Etapa 3: Programación de Obra")
+    st.markdown("La programación de la obra se genera automáticamente con base en la cotización y la factura seleccionada.")
+
+    # Simulación de cronograma
+    cronograma_data = {
+        "Actividad": [
+            "Preparación del Terreno",
+            "Adquisición de Materiales",
+            "Construcción de Cimientos",
+            "Estructura Principal",
+            "Acabados Finales",
+        ],
+        "Duración (días)": [10, 15, 20, 30, 25],
+        "Inicio Estimado": [
+            "2024-01-01",
+            "2024-01-11",
+            "2024-01-26",
+            "2024-02-15",
+            "2024-03-17",
+        ],
+        "Fin Estimado": [
+            "2024-01-10",
+            "2024-01-25",
+            "2024-02-14",
+            "2024-03-16",
+            "2024-04-10",
+        ],
+    }
+    cronograma_df = pd.DataFrame(cronograma_data)
+
+    st.markdown("### Cronograma de Actividades")
+    st.dataframe(cronograma_df, use_container_width=True)
+
+    # Gráfico de Gantt
+    fig_gantt = px.timeline(
+        cronograma_df,
+        x_start="Inicio Estimado",
+        x_end="Fin Estimado",
+        y="Actividad",
+        title="Cronograma de Obra",
+        color="Actividad",
+        labels={"Actividad": "Tareas"}
+    )
+    fig_gantt.update_yaxes(categoryorder="total ascending")
+    st.plotly_chart(fig_gantt, use_container_width=True)
+
+    # Cálculo estimado de costos por actividad
+    costo_diario = st.number_input("Introduce el costo diario promedio por actividad (MXN):", min_value=0, value=5000, step=1000)
+    cronograma_df["Costo Estimado (MXN)"] = cronograma_df["Duración (días)"] * costo_diario
+
+    st.dataframe(cronograma_df[["Actividad", "Duración (días)", "Costo Estimado (MXN)"]], use_container_width=True)
+
+    # Gráfico de costos estimados
+    fig_costos = px.bar(
+        cronograma_df,
+        x="Actividad",
+        y="Costo Estimado (MXN)",
+        title="Costo Estimado por Actividad",
+        text_auto=True,
+        color="Actividad",
+    )
+    st.plotly_chart(fig_costos, use_container_width=True)
+
+# --------------------- Generación del Reporte PDF ---------------------
+elif tabs == "Generar Reporte PDF":
+    st.subheader("Generar Reporte PDF")
+    st.markdown("Genera un reporte completo con todos los datos procesados del proyecto.")
+
+    def generar_reporte_pdf():
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+
+        # Título principal
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(200, 10, txt="Reporte de Seguimiento de Proyectos - Holtmont México", ln=True, align="C")
+        pdf.ln(10)
+
+        # Sección: Factura
+        if "factura_detalle" in locals() and not factura_detalle.empty:
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(200, 10, txt="Factura Simulada", ln=True)
+            pdf.set_font("Arial", size=10)
+            pdf.cell(
+                0, 10,
+                txt=f"Factura: {factura_detalle['Factura']} | Proveedor: {factura_detalle['Proveedor']} | "
+                    f"Monto Total: MXN {factura_detalle['Monto Total (MXN)']:,.2f} | Estado: {factura_detalle['Estado de Pago']}",
+                ln=True
+            )
+            pdf.ln(10)
+
+        # Sección: Levantamiento
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Etapa 1: Levantamiento", ln=True)
+        pdf.set_font("Arial", size=10)
+        if "df_levantamiento" in locals() and not df_levantamiento.empty:
+            for i, row in df_levantamiento.iterrows():
+                pdf.cell(0, 10, txt=f"- Proyecto: {row['Nombre Proyecto']} | Estado: {row['Estado Levantamiento']}", ln=True)
+            pdf.ln(10)
+
+        # Sección: Cotización
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Etapa 2: Cotización", ln=True)
+        pdf.set_font("Arial", size=10)
+        if "df_cotizacion" in locals() and not df_cotizacion.empty:
+            for i, row in df_cotizacion.iterrows():
+                pdf.cell(
+                    0, 10,
+                    txt=f"Producto: {row['Producto']} | Costo Unitario: MXN {row['Costo Unitario (MXN)']:,.2f} | "
+                        f"Cantidad: {row['Cantidad']} | Costo Total: MXN {row['Costo Total (MXN)']:,.2f}",
+                    ln=True
+                )
+            pdf.ln(10)
+
+        # Sección: Cronograma
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(200, 10, txt="Etapa 3: Programación de Obra", ln=True)
+        pdf.set_font("Arial", size=10)
+        if "cronograma_df" in locals() and not cronograma_df.empty:
+            for i, row in cronograma_df.iterrows():
+                pdf.cell(
+                    0, 10,
+                    txt=f"Actividad: {row['Actividad']} | Duración: {row['Duración (días)']} días | "
+                        f"Costo Estimado: MXN {row['Costo Estimado (MXN)']:,.2f}",
+                    ln=True
+                )
+            pdf.ln(10)
+
+        return pdf
+
+    if st.button("Generar Reporte PDF"):
+        pdf = generar_reporte_pdf()
+        pdf_path = "reporte_completo.pdf"
+        pdf.output(pdf_path)
+        st.success(f"¡Reporte PDF generado correctamente! Puedes descargarlo [aquí](./{pdf_path}).")
