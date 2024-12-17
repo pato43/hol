@@ -182,10 +182,12 @@ elif tabs == "Etapa 2: Cotización":
         st.markdown("### Detalles de Costos por Producto")
         for _, row in df_cotizacion.iterrows():
             st.markdown(
-                f"- **Producto:** {row['Producto']}  
-                **Costo Unitario:** MXN {row['Costo Unitario (MXN)']:,.2f}  
-                **Cantidad:** {row['Cantidad']}  
-                **Costo Total:** MXN {row['Costo Total (MXN)']:,.2f}"
+                f"""
+                - **Producto:** {row['Producto']}  
+                  **Costo Unitario:** MXN {row['Costo Unitario (MXN)']:,.2f}  
+                  **Cantidad:** {row['Cantidad']}  
+                  **Costo Total:** MXN {row['Costo Total (MXN)']:,.2f}
+                """
             )
     else:
         st.warning("No se encontraron productos relacionados en la factura seleccionada.")
