@@ -24,7 +24,8 @@ st.markdown(
 tabs = st.sidebar.radio(
     "Navegación por etapas:",
     ("Inicio", "Factura Simulada", "Etapa 1: Levantamiento", "Etapa 2: Cotización", 
-     "Etapa 3: Programación de Obra", "Etapa 4: Ejecución y Monitoreo", "Generar Reporte PDF")
+     "Etapa 3: Programación de Obra", "Etapa 4: Ejecución y Monitoreo", 
+     "Pago de la Obra", "Generar Factura", "Generar Reporte PDF")
 )
 
 # --------------------- Pestaña: Inicio ---------------------
@@ -40,7 +41,7 @@ if tabs == "Inicio":
         - **Programación de Obra**
         - **Ejecución de la Obra**
         - **Pago de la Obra**
-        
+
         Todos los procesos se automatizan a partir de los datos de una **factura simulada**.
         """
     )
@@ -106,13 +107,19 @@ elif tabs == "Etapa 1: Levantamiento":
     st.subheader("Etapa 1: Levantamiento de Información")
     st.markdown("En esta sección se detalla el estado y progreso de los levantamientos iniciales por proyecto.")
 
+    # Verificar si la factura está disponible
+    if "df_factura" in globals() and not df_factura.empty:
+        productos_relacionados = df_factura[df_factura["Factura"] == factura_seleccionada].iloc[0]["Productos"]
+    else:
+        productos_relacionados = "No disponible (sin factura seleccionada)"
+
     # Simulación de datos de levantamiento
     levantamiento_data = {
         "ID Proyecto": [1, 2, 3],
         "Nombre Proyecto": ["Edificio Corporativo A", "Planta Industrial B", "Residencial C"],
         "Responsable": ["Arq. Pérez", "Ing. López", "Arq. Martínez"],
         "Estado Levantamiento": ["Completado", "En Progreso", "Pendiente"],
-        "Productos Relacionados": df_factura.loc[0, "Productos"]  # Relacionar productos de la factura simulada
+        "Productos Relacionados": [productos_relacionados] * 3
     }
     df_levantamiento = pd.DataFrame(levantamiento_data)
 
@@ -128,10 +135,10 @@ elif tabs == "Etapa 1: Levantamiento":
 # --------------------- Etapa 2: Cotización ---------------------
 elif tabs == "Etapa 2: Cotización":
     st.subheader("Etapa 2: Cotización")
-    st.markdown("En esta etapa se genera la cotización automática basada en los productos de la factura.")
+    st.markdown("En esta etapa se genera la cotización automática basada en los productos de la factura seleccionada.")
 
     # Simulación de costos para los productos en la factura seleccionada
-    productos = df_factura.loc[0, "Productos"].split(", ")
+    productos = productos_relacionados.split(", ")
     costos_unitarios = [50000, 30000, 15000]  # Simulación de costos
     cantidades = [10, 5, 8]  # Simulación de cantidades
     cotizacion_data = {
@@ -217,9 +224,8 @@ elif tabs == "Etapa 3: Programación de Obra":
 elif tabs == "Etapa 4: Ejecución y Monitoreo":
     st.subheader("Etapa 4: Ejecución y Monitoreo")
     st.markdown(
-        """
-        En esta etapa se realiza el seguimiento del progreso del proyecto, así como la entrega de documentación asociada.
-        """
+        "En esta etapa se realiza el seguimiento del progreso del proyecto, "
+        "así como la entrega de documentación asociada."
     )
 
     # Simulación de datos de ejecución
@@ -267,8 +273,8 @@ elif tabs == "Pago de la Obra":
     st.markdown("Control del estado de pago según la factura seleccionada.")
 
     # Estado del pago basado en la factura seleccionada
-    st.markdown("### Información de la Factura Seleccionada")
     factura_pago = df_factura[df_factura["Factura"] == factura_seleccionada].iloc[0]
+    st.markdown("### Información de la Factura Seleccionada")
     st.markdown(f"""
     **Factura:** {factura_pago['Factura']}  
     **Monto Total:** MXN {factura_pago['Monto Total (MXN)']:,.2f}  
@@ -299,6 +305,7 @@ elif tabs == "Generar Reporte PDF":
         pdf.set_font("Arial", "B", 12)
         pdf.cell(200, 10, txt="Factura Simulada", ln=True)
         pdf.set_font("Arial", size=10)
+        factura_pago = df_factura[df_factura["Factura"] == factura_seleccionada].iloc[0]
         pdf.cell(
             0, 10,
             txt=f"Factura: {factura_pago['Factura']} | Proveedor: {factura_pago['Proveedor']} | "
@@ -340,11 +347,6 @@ elif tabs == "Generar Reporte PDF":
                 ln=True
             )
         pdf.ln(10)
-
-        # Total estimado
-        total_costo = cronograma_df["Costo Estimado (MXN)"].sum()
-        pdf.set_font("Arial", "B", 12)
-        pdf.cell(200, 10, txt=f"Costo Total Estimado: MXN {total_costo:,.2f}", ln=True)
 
         return pdf
 
